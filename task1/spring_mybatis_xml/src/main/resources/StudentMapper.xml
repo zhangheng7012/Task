@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.student.dao.StudentMapper">
+
+<!--    设置实体类变量名与数据库字段名的映射关系
+        使用时，需将 resultType 改为 resultMap ，
+        双引号中填写resultMap的 id 名。
+        <resultMap id="studentResultMap" type="students">
+        <id property="id" column="id"/>
+        <result property="createAt" column="create_at"/>
+        <result property="updateAt" column="update_at"/>
+        <result property="onlineNum" column="online_num"/>
+        <result property="knowHow" column="know_how"/>
+    </resultMap>-->
+
+    <insert id="insertStudent" parameterType="students" keyProperty="id" useGeneratedKeys="true">
+        insert into xzy_student(create_at,update_at,name,qq,job,date,school,online_num,daily,
+        dream,brother,know_how) values(#{createAt},#{updateAt},#{name},#{qq},#{job},#{date},
+        #{school},#{onlineNum},#{daily},#{dream}, #{brother},#{knowHow})
+<!--        <selectKey keyProperty="id" resultType="int" order="AFTER">
+            &lt;!&ndash;字母大小写均可执行&ndash;&gt;
+            select last_insert_id()
+        </selectKey>-->
+    </insert>
+
+    <select id="selectStuById" parameterType="int" resultType="students">
+        select * from xzy_student where id = #{id}
+    </select>
+
+    <select id="selectStuByName" parameterType="String" resultType="students">
+        select * from xzy_student where name = #{name}
+    </select>
+
+    <update id="updateStudent" parameterType="students">
+        update xzy_student set name = #{name},qq = #{qq} where id = #{id}
+    </update>
+
+    <delete id="deleteStudent" parameterType="int">
+        delete from xzy_student where id = #{id}
+    </delete>
+
+
+
+</mapper>

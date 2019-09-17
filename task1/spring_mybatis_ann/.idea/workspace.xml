@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="bffcac4f-ae8b-4bc3-be81-125e2ffed829" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../spring_mybatis_xml/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/student/dao/StudentMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/student/dao/StudentMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/student/service/StudentService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/student/service/StudentService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/student/service/impl/StudentServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/student/service/impl/StudentServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/MybatisConfig.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/MybatisConfig.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/StudentMapper.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/StudentMapper.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/student/service/impl/StudentsTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/student/service/impl/StudentsTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/MybatisConfig.xml" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/MybatisConfig.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/StudentMapper.xml" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/StudentMapper.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/student/dao/StudentMapper.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/student/dao/StudentMapper.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/student/service/StudentService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/student/service/StudentService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/student/service/impl/StudentServiceImpl.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/student/service/impl/StudentServiceImpl.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/test-classes/com/student/service/impl/StudentsTest.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/test-classes/com/student/service/impl/StudentsTest.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../spring_mybatis_xml/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../spring_mybatis_xml/.idea/compiler.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../spring_mybatis_xml/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../spring_mybatis_xml/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../spring_mybatis_xml/src/main/java/com/student/dao/StudentMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/../spring_mybatis_xml/src/main/java/com/student/dao/StudentMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../spring_mybatis_xml/src/main/java/com/student/service/StudentService.java" beforeDir="false" afterPath="$PROJECT_DIR$/../spring_mybatis_xml/src/main/java/com/student/service/StudentService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../spring_mybatis_xml/src/main/java/com/student/service/impl/StudentServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/../spring_mybatis_xml/src/main/java/com/student/service/impl/StudentServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../spring_mybatis_xml/src/main/resources/MybatisConfig.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../spring_mybatis_xml/src/main/resources/MybatisConfig.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../spring_mybatis_xml/src/main/resources/StudentMapper.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../spring_mybatis_xml/src/main/resources/StudentMapper.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../spring_mybatis_xml/src/test/java/com/student/service/impl/StudentsTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../spring_mybatis_xml/src/test/java/com/student/service/impl/StudentsTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../spring_mybatis_xml/target/classes/MybatisConfig.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../spring_mybatis_xml/target/classes/MybatisConfig.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../spring_mybatis_xml/target/classes/StudentMapper.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../spring_mybatis_xml/target/classes/StudentMapper.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../spring_mybatis_xml/target/classes/com/student/dao/StudentMapper.class" beforeDir="false" afterPath="$PROJECT_DIR$/../spring_mybatis_xml/target/classes/com/student/dao/StudentMapper.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../spring_mybatis_xml/target/classes/com/student/service/StudentService.class" beforeDir="false" afterPath="$PROJECT_DIR$/../spring_mybatis_xml/target/classes/com/student/service/StudentService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../spring_mybatis_xml/target/classes/com/student/service/impl/StudentServiceImpl.class" beforeDir="false" afterPath="$PROJECT_DIR$/../spring_mybatis_xml/target/classes/com/student/service/impl/StudentServiceImpl.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../spring_mybatis_xml/target/test-classes/com/student/service/impl/StudentsTest.class" beforeDir="false" afterPath="$PROJECT_DIR$/../spring_mybatis_xml/target/test-classes/com/student/service/impl/StudentsTest.class" afterDir="false" />
+    </list>
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Interface" />
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="MavenImportPreferences">
+    <option name="importingSettings">
+      <MavenImportingSettings>
+        <option name="importAutomatically" value="true" />
+      </MavenImportingSettings>
+    </option>
+  </component>
+  <component name="ProjectId" id="1QreejEmaeGyOldfwMFPOccRx99" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="PropertiesComponent">
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="com.intellij.testIntegration.createTest.CreateTestDialog.defaultLibrary" value="Groovy JUnit" />
+    <property name="com.intellij.testIntegration.createTest.CreateTestDialog.defaultLibrarySuperClass.Groovy JUnit" value="groovy.util.GroovyTestCase" />
+    <property name="com.intellij.testIntegration.createTest.CreateTestDialog.includeInheritedMembers" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="project.structure.last.edited" value="Libraries" />
+    <property name="project.structure.proportion" value="0.15" />
+    <property name="project.structure.side.proportion" value="0.34411764" />
+    <property name="settings.editor.selected.configurable" value="plugins.junitgenerator.application" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CreateTestDialog.RecentsKey">
+      <recent name="com.student.service" />
+    </key>
+    <key name="ExtractSuperBase.RECENT_KEYS">
+      <recent name="com.student.service.impl" />
+    </key>
+    <key name="CreateTestDialog.Recents.Supers">
+      <recent name="groovy.util.GroovyTestCase" />
+    </key>
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="RunManager" selected="JUnit.StudentsTest">
+    <configuration name="StudentsTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="spring_mybatis_ann" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.student.service.impl.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.student.service.impl" />
+      <option name="MAIN_CLASS_NAME" value="com.student.service.impl.StudentsTest" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="StudentsTest.testFindStuById" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="spring_mybatis_ann" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.student.service.impl.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.student.service.impl" />
+      <option name="MAIN_CLASS_NAME" value="com.student.service.impl.StudentsTest" />
+      <option name="METHOD_NAME" value="testFindStuById" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="JUnit.StudentsTest" />
+        <item itemvalue="JUnit.StudentsTest.testFindStuById" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="bffcac4f-ae8b-4bc3-be81-125e2ffed829" name="Default Changelist" comment="" />
+      <created>1568533239981</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1568533239981</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
