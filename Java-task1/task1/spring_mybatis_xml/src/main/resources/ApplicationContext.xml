@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.springframework.org/schema/beans"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd">
+    <!-- 自动扫描
+    在指定包下，若某类带有特定注解，@Component、@Repository、@Service、@Controller,
+    则会将这个对象作为Bean注册到Spring容器中。   -->
+    <context:component-scan base-package="com.student"/>
+    <!-- 开启注解 -->
+    <context:annotation-config/>
+
+    <!-- 配置C3P0数据源 -->
+    <bean id="dataSource"
+          class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="user" value="root"></property>
+        <property name="password" value="Zhang123!"></property>
+        <property name="jdbcUrl" value="jdbc:mysql://localhost:3306/xzy?characterEncoding=utf8"></property>
+        <property name="driverClass" value="com.mysql.jdbc.Driver"></property>
+
+        <property name="initialPoolSize" value="5"></property>
+        <property name="maxPoolSize" value="10"></property>
+    </bean>
+
+    <!-- 创建SqlSessionFactory，同时指定数据源 -->
+    <!-- SqlSessionFactoryBean相当于SqlSessionFactoryBuilder -->
+    <!-- spring和MyBatis完美整合 -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!--引用配置好的数据源DataSource的bean-->
+        <property name="dataSource" ref="dataSource"/>
+        <!-- 具体指定xml文件，可不配 -->
+        <property name="configLocation" value="classpath:MybatisConfig.xml"/>
+    </bean>
+
+    <!-- 准备配置SqlSessionTemplate  -->
+    <bean id="sqlSessionTemplate" class="org.mybatis.spring.SqlSessionTemplate">
+        <!-- 以sqlSessionFactory为参数传入构造函数中 -->
+        <constructor-arg index="0" ref="sqlSessionFactory" />
+    </bean>
+
+    <!--   添加实现类Bean  -->
+    <bean id="studentServiceImpl" class="com.student.service.impl.StudentServiceImpl"/>
+
+</beans>
