@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="
+     http://www.springframework.org/schema/context
+     http://www.springframework.org/schema/context/spring-context-3.0.xsd
+     http://www.springframework.org/schema/beans
+     http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+     http://www.springframework.org/schema/jdbc
+     http://www.springframework.org/schema/jdbc/spring-jdbc-3.0.xsd">
+
+    <!--开启注解的扫描，处理service和dao，controller不需要Spring框架去处理-->
+    <context:component-scan base-package="com.ssm" >
+        <!--配置哪些注解不扫描-->
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller" />
+    </context:component-scan>
+
+    <context:annotation-config />
+
+    <!-- 配置C3P0数据源 -->
+    <bean id="dataSource"
+          class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="user" value="root"></property>
+        <property name="password" value="Zhang123!"></property>
+        <property name="jdbcUrl" value="jdbc:mysql://localhost:3306/xzy?characterEncoding=utf8"></property>
+        <property name="driverClass" value="com.mysql.jdbc.Driver"></property>
+
+        <property name="initialPoolSize" value="5"></property>
+        <property name="maxPoolSize" value="10"></property>
+    </bean>
+
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="typeAliasesPackage" value="com.ssm.pojo" />
+        <property name="dataSource" ref="dataSource"/>
+        <property name="mapperLocations" value="classpath:com.ssm.dao/*.xml"/>
+
+        <property name="configLocation" value="classpath:mybatisConfig.xml"/>
+
+        <property name="plugins">
+            <array>
+                <bean class="com.github.pagehelper.PageInterceptor">
+                    <property name="properties">
+                        <!--使用下面的方式配置参数，一行配置一个 -->
+                        <value>
+
+                            <!--      offsetAsPageNum=true-->
+                            <!--      rowBoundsWithCount=true-->
+                            <!--      pageSizeZero=true-->
+                            <!--     分页参数合理化，当pageNum <= 0 时，
+                                     会查询第一页，pageNum > pages（总数）时，
+                                     会查询最后一页。
+                                     默认为false时，直接根据参数查询。-->
+                            <!--     reasonable=true-->
+
+                        </value>
+                    </property>
+                </bean>
+            </array>
+        </property>
+    </bean>
+
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+        <property name="basePackage" value="com.ssm.dao"/>
+    </bean>
+
+</beans>

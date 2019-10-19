@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context-3.0.xsd
+        http://www.springframework.org/schema/mvc
+        http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd">
+
+    <!--  使用false，表示所有注解的类都不扫描 -->
+    <context:component-scan base-package="com.ssm" use-default-filters="false">
+        <!--配置哪些注解进行扫描-->
+        <context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    </context:component-scan>
+
+    <context:annotation-config/>
+
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="viewClass" value="org.springframework.web.servlet.view.JstlView" />
+        <property name="prefix" value="/WEB-INF/jsp/" />
+        <property name="suffix" value=".jsp" />
+    </bean>
+
+    <!-- 激活MVC功能 -->
+<!--
+    <mvc:annotation-driven/>
+-->
+    <!--使用default服务器处理静态资源-->
+    <mvc:default-servlet-handler/>
+
+    <!-- hibernate validator 校验器 -->
+    <!-- 注册校验器 -->
+    <mvc:annotation-driven validator="validator"/>
+
+    <bean id="validator" class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean">
+        <property name="providerClass" value="org.hibernate.validator.HibernateValidator"/>
+        <!-- 指定校验使用的错误信息文件，如果不指定则默认使用classpath下面的validationMessage.properties文件 -->
+        <property name="validationMessageSource" ref="messageSource"/>
+    </bean>
+
+    <!--注册类型转换服务Bean，此处可省略-->
+<!--
+    <bean id="conversionService" class="org.springframework.context.support.ConversionServiceFactoryBean"></bean>
+-->
+
+    <!-- 配置基于注解的处理器适配器，将validator校验器注入处理适配器中，此处可省略 -->
+<!--
+    <mvc:annotation-driven conversion-service="conversionService" validator="validator"></mvc:annotation-driven>
+-->
+
+    <!-- 指定校验错误信息配置文件，国际化 -->
+    <bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+        <!-- 资源文件名,使用basenames，不用加后缀名，此处需注意name不是basename-->
+        <property name="basenames">
+            <list>
+                <!-- 在web环境中一定要定位到classpath 否则默认到当前web应用下找  -->
+                <value>classpath:validationMessage</value>
+            </list>
+        </property>
+        <!-- 资源文件编码格式 -->
+        <property name="fileEncodings" value="UTF-8"/>
+        <!-- jsp页面编码格式 -->
+        <property name="defaultEncoding" value="UTF-8"/>
+        <!-- 对资源文件内容缓存时间，单位秒 -->
+        <property name="cacheSeconds" value="120"/>
+
+        <!-- 语言区域里没有找到对应的国际化文件时，默认使用validationMessage.properties文件-->
+        <property name="useCodeAsDefaultMessage" value="true" />
+
+    </bean>
+
+    <!-- 国际化操作拦截器 如果采用基于（请求/Session/Cookie）则必需配置 -->
+    <!-- 主要用于获取请求中的locale信息，将其转为Locale对像，获取LocaleResolver对象-->
+    <mvc:interceptors>
+        <bean id="localeChangeInterceptor" class="org.springframework.web.servlet.i18n.LocaleChangeInterceptor"/>
+    </mvc:interceptors>
+
+    <!-- 动态切换国际化，配置SessionLocaleResolver用于将Locale对象（由语言和国家组成）存储于Session中供后续使用，类似缓存 -->
+    <bean id="localeResolver" class="org.springframework.web.servlet.i18n.SessionLocaleResolver"/>
+
+    <!-- 与SessionLocaleResolver的区别，就是将Locale对象存储于Cookie中供后续使用 -->
+    <!--
+    <bean id="localeResolver" class="org.springframework.web.servlet.i18n.CookieLocaleResolver" />
+    -->
+
+</beans>
