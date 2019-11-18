@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.jnshu.dao.DirectionMapper">
+
+  <resultMap id="BaseResultMap" type="com.jnshu.pojo.Direction">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="image" jdbcType="VARCHAR" property="image" />
+    <result column="direction" jdbcType="VARCHAR" property="direction" />
+    <result column="profession" jdbcType="VARCHAR" property="profession" />
+    <result column="introduction" jdbcType="VARCHAR" property="introduction" />
+    <result column="threshold" jdbcType="INTEGER" property="threshold" />
+    <result column="difficult" jdbcType="INTEGER" property="difficult" />
+    <result column="period" jdbcType="VARCHAR" property="period" />
+    <result column="importance" jdbcType="INTEGER" property="importance" />
+    <result column="salary_one" jdbcType="VARCHAR" property="salaryOne" />
+    <result column="salary_two" jdbcType="VARCHAR" property="salaryTwo" />
+    <result column="salary_three" jdbcType="VARCHAR" property="salaryThree" />
+    <result column="study_num" jdbcType="INTEGER" property="studyNum" />
+    <result column="point" jdbcType="VARCHAR" property="point" />
+    <result column="create_at" jdbcType="BIGINT" property="createAt" />
+    <result column="update_at" jdbcType="BIGINT" property="updateAt" />
+  </resultMap>
+
+  <sql id="Base_Column_List">
+    id, image, direction, profession, introduction, threshold, difficult, period, importance, 
+    salary_one, salary_two, salary_three, study_num, point, create_at, update_at
+  </sql>
+
+  <select id="selectByDirection" parameterType="String" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from direction
+    where direction = #{direction,jdbcType=VARCHAR}
+  </select>
+
+  <insert id="insert" parameterType="com.jnshu.pojo.Direction">
+    insert into direction
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="image != null">
+        image,
+      </if>
+      <if test="direction != null">
+        direction,
+      </if>
+      <if test="profession != null">
+        profession,
+      </if>
+      <if test="introduction != null">
+        introduction,
+      </if>
+      <if test="threshold != null">
+        threshold,
+      </if>
+      <if test="difficult != null">
+        difficult,
+      </if>
+      <if test="period != null">
+        period,
+      </if>
+      <if test="importance != null">
+        importance,
+      </if>
+      <if test="salaryOne != null">
+        salary_one,
+      </if>
+      <if test="salaryTwo != null">
+        salary_two,
+      </if>
+      <if test="salaryThree != null">
+        salary_three,
+      </if>
+      <if test="studyNum != null">
+        study_num,
+      </if>
+      <if test="point != null">
+        point,
+      </if>
+      <if test="createAt != null">
+        create_at,
+      </if>
+      <if test="updateAt != null">
+        update_at,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="image != null">
+        #{image,jdbcType=VARCHAR},
+      </if>
+      <if test="direction != null">
+        #{direction,jdbcType=VARCHAR},
+      </if>
+      <if test="profession != null">
+        #{profession,jdbcType=VARCHAR},
+      </if>
+      <if test="introduction != null">
+        #{introduction,jdbcType=VARCHAR},
+      </if>
+      <if test="threshold != null">
+        #{threshold,jdbcType=INTEGER},
+      </if>
+      <if test="difficult != null">
+        #{difficult,jdbcType=INTEGER},
+      </if>
+      <if test="period != null">
+        #{period,jdbcType=VARCHAR},
+      </if>
+      <if test="importance != null">
+        #{importance,jdbcType=INTEGER},
+      </if>
+      <if test="salaryOne != null">
+        #{salaryOne,jdbcType=VARCHAR},
+      </if>
+      <if test="salaryTwo != null">
+        #{salaryTwo,jdbcType=VARCHAR},
+      </if>
+      <if test="salaryThree != null">
+        #{salaryThree,jdbcType=VARCHAR},
+      </if>
+      <if test="studyNum != null">
+        #{studyNum,jdbcType=INTEGER},
+      </if>
+      <if test="point != null">
+        #{point,jdbcType=VARCHAR},
+      </if>
+      <if test="createAt != null">
+        #{createAt,jdbcType=BIGINT},
+      </if>
+      <if test="updateAt != null">
+        #{updateAt,jdbcType=BIGINT},
+      </if>
+    </trim>
+  </insert>
+
+</mapper>

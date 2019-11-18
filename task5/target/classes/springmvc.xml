@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context-3.0.xsd
+        http://www.springframework.org/schema/mvc
+        http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
+
+    <!--  使用false，表示所有注解的类都不扫描 -->
+    <context:component-scan base-package="com.jnshu" use-default-filters="false">
+        <!--配置哪些注解进行扫描，controller需要扫描-->
+        <context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    </context:component-scan>
+    <!-- 开启注解 -->
+    <context:annotation-config/>
+    <!-- 视图解析器 -->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="viewClass" value="org.springframework.web.servlet.view.JstlView" />
+        <property name="prefix" value="/WEB-INF/jsp/" />
+        <property name="suffix" value=".jsp" />
+    </bean>
+    <!-- Tiles 框架视图解析器 -->
+    <bean id="tilesViewResolver" class="org.springframework.web.servlet.view.tiles3.TilesViewResolver">
+        <property name="order" value="1"/>
+    </bean>
+    <!--tiles的路径配置-->
+    <bean id="tilesConfigurer" class="org.springframework.web.servlet.view.tiles3.TilesConfigurer">
+        <property name="definitions" value="/WEB-INF/tiles.xml"/>
+    </bean>
+
+    <!-- 激活MVC注解配置功能 -->
+    <mvc:annotation-driven/>
+    <!--使用default服务器处理静态资源-->
+    <mvc:default-servlet-handler/>
+
+    <!-- 配置拦截器 -->
+    <mvc:interceptors>
+        <!-- 多个拦截器，顺序执行 -->
+        <!-- 配置登陆拦截器 -->
+        <mvc:interceptor>
+            <!-- /** 表示所有的url，包括子url路径 -->
+            <mvc:mapping path="/**"/>
+            <!-- 放行注册请求 -->
+            <mvc:exclude-mapping path="/**/register"/>
+            <!-- 放行登录请求 -->
+            <mvc:exclude-mapping path="/**/login"/>
+            <!-- 放行首页请求 -->
+            <mvc:exclude-mapping path="/**/home"/>
+            <!-- 放行时间戳转换请求 -->
+            <mvc:exclude-mapping path="/**/date"/>
+            <!-- 放行静态资源 -->
+            <mvc:exclude-mapping path="/**/*.css"/>
+            <mvc:exclude-mapping path="/**/*.png"/>
+            <mvc:exclude-mapping path="/**/*.jpg"/>
+
+            <bean class="com.jnshu.interceptor.LoginInterceptor"></bean>
+        </mvc:interceptor>
+    </mvc:interceptors>
+
+    <!-- 基于注解，配置aop -->
+    <!-- 在配置文件中开启注解的AOP的开发 -->
+    <aop:aspectj-autoproxy/>
+    <!-- 配置切面类的bean，基于注解-->
+    <bean id="log" class="com.jnshu.util.LogUtil"/>
+
+</beans>
