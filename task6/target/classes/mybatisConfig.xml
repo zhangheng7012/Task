@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+
+    <settings>
+        <!--mybatis 自动识别实体类变量名与数据库表格字段名不符
+          前提是变量以小驼峰命名，字段名以下划线隔开-->
+        <setting name="mapUnderscoreToCamelCase" value="true"/>
+        <!--其他配置...  -->
+    </settings>
+
+</configuration>
