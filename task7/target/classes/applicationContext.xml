@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="
+     http://www.springframework.org/schema/context
+     http://www.springframework.org/schema/context/spring-context-3.0.xsd
+     http://www.springframework.org/schema/beans
+     http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+     http://www.springframework.org/schema/jdbc
+     http://www.springframework.org/schema/jdbc/spring-jdbc-3.0.xsd
+     http://www.springframework.org/schema/aop
+     http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
+
+    <!--开启注解的扫描，处理service和dao，controller不需要Spring框架去处理-->
+    <context:component-scan base-package="com.jnshu" >
+        <!--配置哪些注解不扫描-->
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller" />
+    </context:component-scan>
+
+    <context:annotation-config />
+
+    <!-- spring.xml中只能用于service、dao层方法 -->
+    <!-- 基于注解，配置aop -->
+    <!-- 在配置文件中开启注解的AOP的开发 -->
+    <aop:aspectj-autoproxy/>
+    <!-- 配置切面类的bean，基于注解-->
+    <bean id="log" class="com.jnshu.util.LogUtil"/>
+
+    <!-- 配置C3P0数据源 -->
+    <bean id="dataSource"
+          class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="user" value="root"></property>
+        <property name="password" value="Zhang123!"></property>
+        <property name="jdbcUrl" value="jdbc:mysql://localhost:3306/xzy_task4?characterEncoding=utf8"></property>
+        <property name="driverClass" value="com.mysql.jdbc.Driver"></property>
+
+        <!-- 初始化连接池中的连接数，取值应在minPoolSize与maxPoolSize之间，默认为3-->
+        <property name="initialPoolSize" value="50"></property>
+        <!--最大空闲时间，600秒内未使用则连接被丢弃。若为0则永不丢弃。默认值: 0 -->
+        <property name="maxIdleTime" value="600"></property>
+        <!--每60秒检查所有连接池中的空闲连接。默认值: 0，不检查 -->
+        <property name="idleConnectionTestPeriod" value="60"></property>
+        <!--连接池中保留的最大连接数。默认值: 15 -->
+        <property name="maxPoolSize" value="150"></property>
+        <!-- 连接池中保留的最小连接数，默认为：3-->
+        <property name="minPoolSize" value="50"></property>
+        <!--c3p0全局的PreparedStatements缓存的大小。
+        如果maxStatements与maxStatementsPerConnection均为0，则缓存不生效，
+        只要有一个不为0，则语句的缓存就能生效。如果默认值: 0-->
+        <property name="maxStatements" value="200"></property>
+        <!--当连接池中的连接耗尽的时候c3p0一次同时获取的连接数。默认值: 3 -->
+        <property name="acquireIncrement" value="2"/>
+    </bean>
+
+    <!-- 创建SqlSessionFactory，同时指定数据源 -->
+    <!-- SqlSessionFactoryBean相当于SqlSessionFactoryBuilder -->
+    <!-- spring和MyBatis完美整合 -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!-- 指定包名，别名就是类名，首字母小写 -->
+        <property name="typeAliasesPackage" value="com.jnshu.pojo" />
+        <!-- 引用配置好的数据源DataSource的bean -->
+        <property name="dataSource" ref="dataSource"/>
+        <!-- 指定mapper.xml文件的位置 -->
+        <property name="mapperLocations" value="classpath:dao/*.xml"/>
+        <!-- 指定mybatisConfig.xml文件的位置 -->
+        <property name="configLocation" value="classpath:mybatisConfig.xml"/>
+        <!-- 分页插件的配置 -->
+        <property name="plugins">
+            <array>
+                <bean class="com.github.pagehelper.PageInterceptor">
+                    <property name="properties">
+                        <!--使用下面的方式配置参数，一行配置一个 -->
+                        <value>
+
+                            <!--      offsetAsPageNum=true-->
+                            <!--      rowBoundsWithCount=true-->
+                            <!--      pageSizeZero=true-->
+                            <!--     分页参数合理化，当pageNum <= 0 时，
+                                     会查询第一页，pageNum > pages（总数）时，
+                                     会查询最后一页。
+                                     默认为false时，直接根据参数查询。-->
+                            <!--     reasonable=true-->
+
+                        </value>
+                    </property>
+                </bean>
+            </array>
+        </property>
+    </bean>
+    <!-- 指定包路径，自动扫描生成映射器 -->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+        <property name="basePackage" value="com.jnshu.dao"/>
+    </bean>
+
+    <!--阿里云OSS文件上传的初始化设置，有参构造注入属性 -->
+    <bean id="ossUtil"  class="com.jnshu.util.AliyunOSSUtil">
+        <constructor-arg name="endpoint" value="http://oss-cn-beijing.aliyuncs.com"></constructor-arg>
+        <constructor-arg name="accessKeyId" value="LTAI4Fw68QGCDQCJEhkQBst8"></constructor-arg>
+        <constructor-arg name="accessKeySecret" value="Rm5Hc89aiA3fxJaMpAGUmUXn8VRm0b"></constructor-arg>
+    </bean>
+
+    <!--发送邮件的初始化设置，有参构造注入属性 -->
+    <bean id="sendMailUtil"  class="com.jnshu.util.SendMailUtil">
+        <constructor-arg name="apiKey" value="JgKQDmUpPcMpTfSL"></constructor-arg>
+        <constructor-arg name="apiUser" value="basketboy_test_BgIc4q"></constructor-arg>
+        <constructor-arg name="url" value="http://api.sendcloud.net/apiv2/mail/send"></constructor-arg>
+    </bean>
+
+    <!--发送手机验证码的初始化设置，用set注入的方式，常用 -->
+    <bean id="smsUtil"  class="com.jnshu.util.SMSUtil">
+        <property name="serverIP" value="app.cloopen.com"></property>
+        <property name="serverPort" value="8883"></property>
+        <property name="accountSid" value="8a216da86eb206c4016ec07c7a390617"></property>
+        <property name="accountToken" value="5c3d4e0c6b294c95981947821cb6f023"></property>
+        <property name="appId" value="8a216da86eb206c4016ec07c7aa0061e"></property>
+    </bean>
+
+    <!--发送手机验证码的初始化设置，用有参构造方法注入的方式，常用 -->
+    <!--    <bean id="smsUtil" class="com.jnshu.util.SMSUtil">-->
+    <!--        <constructor-arg name="serverIP" value="app.cloopen.com"></constructor-arg>-->
+    <!--        <constructor-arg name="serverPort" value="8883"></constructor-arg>-->
+    <!--        <constructor-arg name="accountSid" value="8a216da86eb206c4016ec07c7a390617"></constructor-arg>-->
+    <!--        <constructor-arg name="accountToken" value="5c3d4e0c6b294c95981947821cb6f023"></constructor-arg>-->
+    <!--        <constructor-arg name="appId" value="8a216da86eb206c4016ec07c7aa0061e"></constructor-arg>-->
+    <!--    </bean>-->
+
+    <!--七牛云初始化设置，用set注入的方式，常用 -->
+    <bean id="qiNiuUtil"  class="com.jnshu.util.QiNiuUtil">
+        <property name="accessKey" value="r6NdSnZWPHNMBMX2STXota1WocmCKnZNlDmu7DKK"></property>
+        <property name="secretKey" value="kZjT9KjAb4ksMUuRZzGAZVEJxrYVD4BvxstdtLvk"></property>
+    </bean>
+
+</beans>
