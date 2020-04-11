@@ -1,0 +1,111 @@
+package com.dxz.admin.controller;
+
+import com.alibaba.fastjson.JSONObject;
+import com.dxz.admin.pojo.Manager;
+import com.dxz.admin.result.CodeInfo;
+import com.dxz.admin.result.Result;
+import com.dxz.admin.service.ManagerService;
+import com.dxz.admin.service.PermissionService;
+import com.dxz.admin.service.RoleService;
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authc.AuthenticationException;
+import org.apache.shiro.authc.IncorrectCredentialsException;
+import org.apache.shiro.authc.LockedAccountException;
+import org.apache.shiro.authc.UsernamePasswordToken;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.apache.shiro.authz.annotation.RequiresRoles;
+import org.apache.shiro.session.Session;
+import org.apache.shiro.subject.Subject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
+@RestController
+@RequestMapping("/")
+public class ShiroLoginController {
+
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
+    @Autowired
+    private ManagerService managerService;
+    @Autowired
+    private PermissionService permissionService;
+    @Autowired
+    private RoleService roleService;
+
+    /**
+     * 登录
+     */
+    @PostMapping("/a/login")
+    public Result managerLogin(@Valid Manager manager, BindingResult bindingResult) {
+
+        if (bindingResult.hasErrors()){
+            Result result = new Result();
+            // 参数校验错误，状态码、错误信息
+            result.setCode(7001);
+            result.setMsg(bindingResult.getFieldError().getDefaultMessage());
+            return result;
+        }
+
+        UsernamePasswordToken token = new UsernamePasswordToken(manager.getName(), manager.getPassword());
+        Subject subject = SecurityUtils.getSubject();
+        try {
+            subject.login(token);
+            // 账号的权限集合
+            Set<String> pers= permissionService.listPermissionURLs(manager.getName());
+            log.info("账号{}：权限有：{}",manager.getName(),pers);
+
+//            Manager manager = (Manager)subject.getPrincipal();
+            Manager manager1 = (Manager)subject.getSession().getAttribute("MANAGER_SESSION");
+
+            Map<String,Object> map = new HashMap<>();
+            map.put("id",manager1.getId());
+            map.put("name",manager1.getName());
+
+            map.put("token",subject.getSession().getId());
+            map.put("permissions",pers);
+            return new Result(CodeInfo.MANAGER_LOGIN_SUCCESS.getCode(),CodeInfo.MANAGER_LOGIN_SUCCESS.getMsg(),map);
+        } catch (IncorrectCredentialsException e) {
+            log.error("登录失败，账号{}密码错误",manager.getName());
+            return new Result(CodeInfo.MANAGER_PASSWORD_FAIL.getCode(),CodeInfo.MANAGER_PASSWORD_FAIL.getMsg());
+        } catch (LockedAccountException e) {
+            log.error("登录失败，账号{}已被冻结",manager.getName());
+            return new Result(CodeInfo.MANAGER_LOGIN_FAIL.getCode(),CodeInfo.MANAGER_LOGIN_FAIL.getMsg());
+        } catch (AuthenticationException e) {
+            log.error("登录失败，账号{}不存在",manager.getName());
+            return new Result(CodeInfo.MANAGER_NULL_FAIL.getCode(),CodeInfo.MANAGER_NULL_FAIL.getMsg());
+        } catch (Exception e) {
+            log.error("登录失败，未知异常:{}",e.getMessage());
+            return new Result(CodeInfo.SOMETHING_WRONG.getCode(),CodeInfo.SOMETHING_WRONG.getMsg());
+        }
+    }
+
+    @GetMapping("/a/doLogout")
+    public Result logout(){
+        Subject subject=SecurityUtils.getSubject();
+//        Manager manager = (Manager)subject.getPrincipal();
+        Manager manager = (Manager)subject.getSession().getAttribute("MANAGER_SESSION");
+        log.info("账号{}退出登录成功",manager.getName());
+        subject.logout();
+        return new Result(CodeInfo.MANAGER_LOGOUT.getCode(),CodeInfo.MANAGER_LOGOUT.getMsg());
+    }
+
+    @GetMapping("/a/toLogin")
+    public Result toLogin(){
+        log.info("账号未登录");
+        return new Result(CodeInfo.MANAGER_NOT_LOGIN.getCode(),CodeInfo.MANAGER_NOT_LOGIN.getMsg());
+    }
+
+    @GetMapping("/a/unauthorized")
+    public Result unauthorized(){
+        log.info("账号未授权");
+        return new Result(CodeInfo.MANAGER_UNAUTHORIZED.getCode(),CodeInfo.MANAGER_UNAUTHORIZED.getMsg());
+    }
+}

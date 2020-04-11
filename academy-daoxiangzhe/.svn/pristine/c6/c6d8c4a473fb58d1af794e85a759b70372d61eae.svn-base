@@ -1,0 +1,67 @@
+package com.dxz.home.interceptor;
+
+import com.dxz.home.dao.UserMapper;
+import com.dxz.home.pojo.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.lang.Nullable;
+import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.ModelAndView;
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+@Component
+public class UserInterceptor implements HandlerInterceptor {
+
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
+    @Resource
+    UserMapper userMapper;
+
+    // 拦截器最先被执行的方法，也可以当做是对当前请求的预处理。
+    // 返回true时，会继续调用下一个拦截器的preHandle方法，
+    // 如果是最后一个拦截器就调用当前请求的controller方法。
+    // 返回false时，表示请求结束，后续拦截器和controller方法都不会执行，可以重定向到指定页面。
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+
+        HttpSession session = request.getSession();
+        // 这里的 userId 是登陆时放入session的
+        Long userId = (Long) session.getAttribute("userId");
+        log.info("用户id {} 已获取",userId);
+
+//        String url = "http://" + request.getServerName() //服务器地址
+//                + ":"
+//                + request.getServerPort()           //端口号
+//                + request.getContextPath()      //项目名称
+//                + request.getServletPath()      //请求页面或其他地址
+//                + "?" + (request.getQueryString()); //参数
+//        log.info("请求URL为："+ url);
+
+        User user = null;
+        if(userId != null) {
+            user = userMapper.selectByPrimaryKey(userId);
+            if(user != null && user.getStatus() == 1){
+                log.info("用户id {} ，查询用户信息：{}",userId,user);
+                return true;
+            }
+        }
+        // 重定向到用户冻结接口
+        response.sendRedirect("/error");
+        return false;
+    }
+
+    // 在preHandle方法返回true时，当前请求被处理之后被调用，
+    // 但是会在前端控制器进行视图渲染之前被调用，可以对controller处理过的ModelAndView进行处理。
+    // 先声明的拦截器preHandle方法先执行，其postHandle方法是后执行。
+    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, @Nullable ModelAndView modelAndView) throws Exception {
+    }
+
+    // 在preHandle方法返回true时被调用，但是是在整个请求结束后，
+    // 视图已经渲染后，才执行，这个方法主要是进行资源清理工作。
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, @Nullable Exception ex) throws Exception {
+    }
+
+}

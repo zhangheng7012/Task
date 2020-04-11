@@ -1,0 +1,265 @@
+package com.dxz.home.controller;
+
+import com.dxz.home.dao.UserMapper;
+import com.dxz.home.pojo.Sign;
+import com.dxz.home.pojo.User;
+import com.dxz.home.pojo.UserExample;
+import com.dxz.home.result.CodeInfo;
+import com.dxz.home.result.Result;
+import com.dxz.home.service.UserService;
+import com.dxz.home.utils.JedisUtil;
+import com.dxz.home.utils.SMSUtil;
+import com.dxz.home.utils.SendMailUtil;
+import com.dxz.home.utils.TelMailTestUtil;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
+import org.hibernate.validator.constraints.Length;
+import org.hibernate.validator.constraints.Range;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import javax.annotation.Resource;
+import javax.validation.Valid;
+import javax.validation.constraints.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/")
+@Validated
+public class UserController {
+
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
+    @Autowired
+    private UserService userService;
+    @Resource
+    private UserMapper userMapper;
+    @Autowired
+    private SMSUtil smsUtil;
+    @Autowired
+    private SendMailUtil sendMailUtil;
+
+    private JedisUtil jedisUtil = new JedisUtil();
+    private TelMailTestUtil telMailTestUtil = new TelMailTestUtil();
+
+    // Long id
+    @GetMapping(value = {"/b/user/{id}","/b/user/"})
+    public Result getUser(@NotNull(message = "用户id不能为空") @PathVariable("id") Long id) {
+        User user = null;
+        try {
+            user = userMapper.selectByPrimaryKey(id);
+            if(user == null) {
+                log.info("用户 {} 不存在", id);
+                return new Result(CodeInfo.USER_FIND_NULL.getCode(),CodeInfo.USER_FIND_NULL.getMsg());
+            }
+        }catch (Exception e){
+            log.error("用户 {} 信息获取失败：{}", id ,e.getMessage());
+            return new Result(CodeInfo.USER_MSG_GET_FAIL.getCode(),CodeInfo.USER_MSG_GET_FAIL.getMsg());
+        }
+        return new Result(CodeInfo.SUCCESS.getCode(),CodeInfo.SUCCESS.getMsg(),user);
+    }
+
+    // Long id,String name, String avatarUrl, Integer grade
+    @PutMapping(value = {"/b/user/{id}","/b/user/"})
+    public Result updateUser(@NotNull(message = "用户id不能为空") @PathVariable("id") Long id,
+                             @Valid User user) {
+        user.setId(id);
+        Boolean a = userService.updateUser(user);
+        if (a) {
+            log.info("用户 {} 信息编辑成功", user.getId());
+            return new Result(CodeInfo.SUCCESS.getCode(), CodeInfo.SUCCESS.getMsg());
+        } else {
+            log.error("用户 {} 信息编辑失败", user.getId());
+            return new Result(CodeInfo.USER_UPDATE_FAIL.getCode(), CodeInfo.USER_UPDATE_FAIL.getMsg());
+        }
+    }
+
+    // Long id
+    @GetMapping(value = {"/b/sign/{id}","/b/sign/"})
+    public Result toUserSign(@NotNull(message = "用户id不能为空") @PathVariable("id") Long id) {
+        User user = null;
+        Map<String,Object> map = new HashMap<>();
+        try {
+            // 查看用户当日是否签到，未签到为0，已签到为1
+            int todaySign = userService.todaySign(id);
+            // 查看用户当月签到时间戳
+            List<Sign> monthSign = userService.monthSign(id);
+            // 查询用户信息
+            user = userMapper.selectByPrimaryKey(id);
+            if(user == null) {
+                log.info("用户 {} 不存在", id);
+                return new Result(CodeInfo.USER_FIND_NULL.getCode(),CodeInfo.USER_FIND_NULL.getMsg());
+            }
+            map.put("todaySign",todaySign);
+            map.put("monthSign",monthSign);
+            map.put("user",user);
+        }catch (Exception e){
+            log.error("用户 {} 信息获取失败：{}", id ,e.getMessage());
+            return new Result(CodeInfo.USER_MSG_GET_FAIL.getCode(),CodeInfo.USER_MSG_GET_FAIL.getMsg());
+        }
+        return new Result(CodeInfo.SUCCESS.getCode(),CodeInfo.SUCCESS.getMsg(),map);
+    }
+
+    // Long id
+    @PostMapping(value = {"/b/sign/{id}","/b/sign/"})
+    public Result userSign(@NotNull(message = "用户id不能为空") @PathVariable("id") Long id) {
+        // 查看用户当日是否签到，未签到为0，已签到为1
+        int todaySign = userService.todaySign(id);
+        if(todaySign == 1) {
+            log.info("用户 {} 签到失败，今日已签到", id );
+            return new Result(CodeInfo.USER_TODAY_SIGN.getCode(), CodeInfo.USER_TODAY_SIGN.getMsg());
+        }
+        // 用户签到加分、添加签到信息
+        Boolean flag = userService.updateSignUser(id);
+        if (flag) {
+            User user = userMapper.selectByPrimaryKey(id);
+            log.info("用户 {} 签到成功", id );
+            return new Result(CodeInfo.SUCCESS.getCode(), CodeInfo.SUCCESS.getMsg(),user);
+        } else {
+            log.error("用户 {} 签到失败", id );
+            return new Result(CodeInfo.USER_SIGN_FAIL.getCode(), CodeInfo.USER_SIGN_FAIL.getMsg());
+        }
+    }
+
+    // Long id 微信登录
+    @PostMapping("/b/login1")
+    public Result userLogin(Long id) {
+        //
+
+
+        Boolean flag = true ;
+        if (flag) {
+//            log.info("用户 {} 获取手机验证码成功", id );
+            return new Result(CodeInfo.SUCCESS.getCode(), CodeInfo.SUCCESS.getMsg());
+        } else {
+//            log.error("用户 {} 获取手机验证码失败", id );
+            return new Result(CodeInfo.USER_PHONE_CODE_GET_FAIL.getCode(), CodeInfo.USER_PHONE_CODE_GET_FAIL.getMsg());
+        }
+    }
+
+    // Long id ,Long phone
+    @PostMapping("/b/user/phone")
+    public Result getPhoneCode(Long id ,@NotBlank(message = "手机号不能为空")
+                @Pattern(regexp = "^[1][3,4,5,6,7,8,9][0-9]{9}$", message = "手机号格式错误") String phone) {
+        // 进行验证码次数检查，过多则无法获取
+        if(telMailTestUtil.timesTest(phone)) {
+            Boolean flag = smsUtil.sendTelCode(phone);
+            if (flag) {
+                log.info("用户 {} 获取手机验证码成功", id );
+                return new Result(CodeInfo.SUCCESS.getCode(), CodeInfo.SUCCESS.getMsg());
+            } else {
+                log.error("用户 {} 获取手机验证码失败", id );
+                return new Result(CodeInfo.USER_PHONE_CODE_GET_FAIL.getCode(), CodeInfo.USER_PHONE_CODE_GET_FAIL.getMsg());
+            }
+        }else {
+            log.info("用户 {} 短时间邮箱验证次数过多", id );
+            return new Result(CodeInfo.USER_CODE_TIMES.getCode(), CodeInfo.USER_CODE_TIMES.getMsg());
+        }
+    }
+
+    // Long id ,Long phone
+    @PostMapping("/b/user/phone/verify")
+    public Result bindUserPhone(Long id ,@NotBlank(message = "手机号不能为空")
+    @Pattern(regexp = "^[1][3,4,5,6,7,8,9][0-9]{9}$", message = "手机号格式错误") String phone,Integer code){
+        if(code != null) {
+            // 取出缓存的验证码
+            String redisCode = jedisUtil.get(phone);
+            // 确定验证码
+            if(redisCode != null && !"".equals(redisCode)) {
+                if (String.valueOf(code).equals(redisCode)) {
+                    Boolean phoneExist = true;
+                    // 查看是否首次绑定
+                    if(userMapper.selectByPrimaryKey(id).getPhone() == null){
+                        phoneExist = false;
+                    }
+                    User user = new User();
+                    user.setId(id);
+                    // 将String类型转为Long类型
+                    user.setPhone(Long.valueOf(phone));
+                    // 修改用户信息，绑定手机号
+                    Boolean a = userService.updateUser(user);
+                    if (a) {
+                        // 首次绑定积分加20
+                        if( !phoneExist ){
+                            // updateScore 可为负数
+                            Boolean addScore = userService.updateUserScore(user,20L);
+                            User user1 = userMapper.selectByPrimaryKey(id);
+                            if(addScore) {
+                                log.info("用户 {} 手机绑定成功", id);
+                                return new Result(CodeInfo.SUCCESS.getCode(), CodeInfo.SUCCESS.getMsg(),user1);
+                            }
+                        }
+                    }else {
+                        log.error("用户 {} 手机绑定失败", id);
+                        return new Result(CodeInfo.USER_PHONE_BIND_FAIL.getCode(), CodeInfo.USER_PHONE_BIND_FAIL.getMsg());
+                    }
+                }
+            }
+        }
+        log.error("用户 {} 验证码异常",id);
+        return new Result(CodeInfo.USER_CODE_FAIL.getCode(), CodeInfo.USER_CODE_FAIL.getMsg());
+    }
+
+    // Long id ,String email
+    @PostMapping("/b/user/email")
+    public Result getEmailCode(Long id, @NotBlank(message = "邮箱不能为空")
+                                @Email(message = "邮箱格式错误") String email){
+        // 进行验证码次数检查，过多则无法获取
+        if(telMailTestUtil.timesTest(email)) {
+            Boolean flag = sendMailUtil.sendMailCode(email);
+            if(flag){
+                log.info("用户 {} 获取邮箱验证码成功", id);
+                return new Result(CodeInfo.SUCCESS.getCode(), CodeInfo.SUCCESS.getMsg());
+            } else {
+                log.error("用户 {} 获取邮箱验证码失败", id );
+                return new Result(CodeInfo.USER_EMAIL_CODE_GET_FAIL.getCode(), CodeInfo.USER_EMAIL_CODE_GET_FAIL.getMsg());
+            }
+        }else {
+            log.info("用户 {} 短时间邮箱验证次数过多", id );
+            return new Result(CodeInfo.USER_CODE_TIMES.getCode(), CodeInfo.USER_CODE_TIMES.getMsg());
+        }
+    }
+
+    // Long id ,String email
+    @PostMapping("/b/user/email/verify")
+    public Result bindUserEmail(@Valid User user,Integer code){
+        if(code != null) {
+            // 取出缓存的验证码
+            String redisCode = jedisUtil.get(user.getEmail());
+            // 确定验证码
+            if(redisCode != null && !"".equals(redisCode)) {
+                Boolean emailExist = true;
+                // 查看是否首次绑定
+                if(userMapper.selectByPrimaryKey(user.getId()).getEmail() == null){
+                    emailExist = false;
+                }
+                if (String.valueOf(code).equals(redisCode)) {
+                    Boolean a = userService.updateUser(user);
+                    if (a) {
+                        // 首次绑定积分加20
+                        if( !emailExist ){
+                            // updateScore 可为负数
+                            Boolean addScore = userService.updateUserScore(user,20L);
+                            User user1 = userMapper.selectByPrimaryKey(user.getId());
+                            if(addScore) {
+                                log.info("用户 {} 邮箱绑定成功", user.getId());
+                                return new Result(CodeInfo.SUCCESS.getCode(), CodeInfo.SUCCESS.getMsg(),user1);
+                            }
+                        }
+                    }else {
+                        log.error("用户 {} 邮箱绑定失败", user.getId());
+                        return new Result(CodeInfo.USER_EMAIL_BIND_FAIL.getCode(), CodeInfo.USER_EMAIL_BIND_FAIL.getMsg());
+                    }
+                }
+            }
+        }
+        log.error("用户 {} 验证码异常", user.getId());
+        return new Result(CodeInfo.USER_CODE_FAIL.getCode(), CodeInfo.USER_CODE_FAIL.getMsg());
+    }
+}

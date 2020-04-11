@@ -1,0 +1,40 @@
+package com.dxz.home.service;
+
+import com.dxz.home.pojo.Connection;
+import com.dxz.home.pojo.Course;
+
+import java.util.List;
+import java.util.Map;
+
+public interface CourseService {
+
+    // 根据视频条件查询，无条件则查询列表
+    List<Map<String,Object>> findCourseListSearch(Course course);
+    // 查询上架的banner视频
+    List<Course> findCourseBanner();
+    // 根据用户id查询用户收藏的视频关系列表
+    List<Connection> findCourseCollect(Long uid);
+    // 根据用户id查询用户点赞的视频关系列表
+    List<Connection> findCourseLove(Long uid);
+    // 添加用户-视频关系
+    Boolean addConnection(Connection connection);
+    // 删除用户-视频关系
+    Boolean deleteConnection(Connection connection);
+    // 根据用户id查询用户收藏视频列表，含老师信息
+    List<Map<String,Object>> courseCollectList(Long uid);
+
+
+    // 根据视频标题，准确查询视频
+    Course findCourseByTitle(String title);
+    // 根据视频id，查询视频
+    Course findCourseById(Long id);
+    // 添加视频
+    Long addCourse(Course course);
+    // 根据id，删除视频
+    Boolean deleteCourse(Long id);
+    // 更新视频信息
+    Boolean updateCourse(Course course);
+    // 添加视频
+    Long findCountVideo(Integer sort,Integer status);
+
+}

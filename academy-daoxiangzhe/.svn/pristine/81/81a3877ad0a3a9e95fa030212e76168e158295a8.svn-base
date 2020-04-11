@@ -1,0 +1,210 @@
+package com.dxz.home.service.impl;
+
+import com.dxz.home.dao.ConnectionMapper;
+import com.dxz.home.dao.CourseMapper;
+import com.dxz.home.dao.UserMapper;
+import com.dxz.home.pojo.*;
+import com.dxz.home.service.CourseService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Service
+public class CourseServiceImpl implements CourseService {
+
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
+    @Resource
+    CourseMapper courseMapper;
+    @Resource
+    UserMapper userMapper;
+    @Resource
+    ConnectionMapper connectionMapper;
+
+    @Override
+    public List<Map<String,Object>> findCourseListSearch(Course course) {
+        List<Course> courses = courseMapper.findCourseListSearch(course);
+        List<Map<String,Object>> videos = new ArrayList<>();
+        //这个地方只能用size来判断，如果判断是否为null的话会报错的，因为list集合本身是不会为null的
+        if(courses.size()!=0){
+            for (Course course1 : courses) {
+                Map<String,Object> map = new HashMap<>();
+                User teacher = userMapper.selectByPrimaryKey(course1.getTeacherId());
+                map.put("teacher",teacher);
+                map.put("video",course1);
+                videos.add(map);
+            }
+        }
+        log.info("查询的视频列表长度：{}",courses.size());
+        return videos;
+    }
+
+    @Override
+    public List<Course> findCourseBanner() {
+        Course course = new Course();
+        course.setSort(1);
+        course.setStatus(1);
+        List<Course> courses = courseMapper.findCourseListSearch(course);
+        log.info("查询的banner视频列表长度：{}",courses.size());
+        return courses;
+    }
+
+    @Override
+    public List<Map<String,Object>> courseCollectList(Long uid) {
+        List<Connection> connections = findCourseCollect(uid);
+        List<Map<String,Object>> videos = null;
+        if(connections.size()!=0) {
+            for (Connection connection : connections) {
+                Course course = new Course();
+                course.setId(connection.getVid());
+                // 视频状态，1为上架
+                course.setStatus(1);
+                videos = findCourseListSearch(course);
+            }
+        }
+        return videos;
+    }
+
+    @Override
+    public List<Connection> findCourseCollect(Long uid) {
+        Connection connection = new Connection();
+        connection.setUid(uid);
+        // 关系状态，1为被收藏，2为被点赞
+        connection.setStatus(1);
+        List<Connection> connections = connectionMapper.findCourseConnection(connection);
+        log.info("查询的用户收藏视频关系列表长度：{}",connections.size());
+        return connections;
+    }
+
+    @Override
+    public List<Connection> findCourseLove(Long uid) {
+        Connection connection = new Connection();
+        connection.setUid(uid);
+        connection.setStatus(2);
+        List<Connection> connections = connectionMapper.findCourseConnection(connection);
+        log.info("查询的用户点赞视频关系列表长度：{}",connections.size());
+        return connections;
+    }
+
+    @Override
+    public Course findCourseById(Long id) {
+        Course course = courseMapper.selectByPrimaryKey(id);
+        String teacherName = userMapper.selectByPrimaryKey(course.getTeacherId()).getName();
+        course.setTeacherName(teacherName);
+        return course;
+    }
+
+    @Override
+    public Boolean addConnection(Connection connection) {
+        connection.setCreateId(connection.getUid());
+        connection.setUpdateId(connection.getUid());
+        connection.setCreateAt(System.currentTimeMillis());
+        connection.setUpdateAt(System.currentTimeMillis());
+        int row = connectionMapper.insertSelective(connection);
+        log.info("插入用户-视频关系ID：{}",connection.getId());
+
+        Course course = courseMapper.selectByPrimaryKey(connection.getVid());
+        course.setCollectSum(course.getCollectSum() + 1);
+        course.setLoveSum(course.getLoveSum() + 1);
+        course.setUpdateAt(System.currentTimeMillis());
+        Boolean result = updateCourse(course);
+        if(row > 0 && result){
+            return true;
+        }else {
+            return false;
+        }
+    }
+
+    @Override
+    public Boolean deleteConnection(Connection connection) {
+        ConnectionExample example = new ConnectionExample();
+        ConnectionExample.Criteria criteria = example.createCriteria();
+        criteria.andUidEqualTo(connection.getUid());
+        criteria.andVidEqualTo(connection.getVid());
+        criteria.andStatusEqualTo(connection.getStatus());
+        int row = connectionMapper.deleteByExample(example);
+        log.info("删除视频行数：{}",row);
+
+        Course course = courseMapper.selectByPrimaryKey(connection.getVid());
+        course.setCollectSum(course.getCollectSum() - 1);
+        course.setLoveSum(course.getLoveSum() - 1);
+        course.setUpdateAt(System.currentTimeMillis());
+        Boolean result = updateCourse(course);
+        if(row > 0 && result){
+            return true;
+        }else {
+            return false;
+        }
+    }
+
+    @Override
+    public Course findCourseByTitle(String title) {
+        CourseExample example = new CourseExample();
+        example.createCriteria().andTitleEqualTo(title);
+        // 根据标题查询，这里不是模糊查询
+        List<Course> courses = courseMapper.selectByExample(example);
+        //这个地方只能用size来判断，如果判断是否为null的话会报错的，因为list集合本身是不会为null的
+        if(courses.size()!=0){
+            log.info("根据标题查找视频信息：{}",courses.get(0));
+            return courses.get(0);
+        }else{
+            return null;
+        }
+    }
+
+    @Override
+    public Long addCourse(Course course) {
+        // 视频状态，1为上架，2为下架，默认为2
+        course.setStatus(2);
+        course.setCollectSum(0L);
+        course.setLoveSum(0L);
+
+        course.setUpdateId(course.getCreateId());
+        course.setCreateAt(System.currentTimeMillis());
+        course.setUpdateAt(System.currentTimeMillis());
+        int aa = courseMapper.insertSelective(course);
+        log.info("插入视频ID：{}",course.getId());
+
+        return course.getId();
+    }
+
+    @Override
+    public Boolean deleteCourse(Long id) {
+        int row = courseMapper.deleteByPrimaryKey(id);
+        log.info("删除视频行数：{}",row);
+        if(row > 0){
+            return true;
+        }else {
+            return false;
+        }
+    }
+
+    @Override
+    public Boolean updateCourse(Course course) {
+        course.setUpdateAt(System.currentTimeMillis());
+        int row = courseMapper.updateByPrimaryKeySelective(course);
+        log.info("编辑视频行数：{}",row);
+        if(row > 0){
+            return true;
+        }else {
+            return false;
+        }
+    }
+
+    @Override
+    public Long findCountVideo(Integer sort,Integer status) {
+        CourseExample example = new CourseExample();
+        CourseExample.Criteria criteria = example.createCriteria();
+        criteria.andSortEqualTo(sort);
+        criteria.andStatusEqualTo(status);
+        // 根据分类查询数据量
+        Long courses = courseMapper.countByExample(example);
+        return courses;
+    }
+}

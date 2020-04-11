@@ -1,0 +1,48 @@
+package com.dxz.home.utils;
+
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Pointcut;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+import java.util.Arrays;
+
+@Aspect
+@Component
+public class LogAspect {
+
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
+    @Pointcut("execution(public * com.dxz.home.controller.*.*(..))")
+    public void controllerMethod() {}
+
+    @Pointcut("execution(public * com.dxz.home.service.*.*(..))")
+    public void serviceMethod() {}
+
+    @Around("controllerMethod()")
+//    @Around("controllerMethod() || serviceMethod()")
+    public Object arround(ProceedingJoinPoint point) throws Throwable {
+        // 请求的类名
+        String className = point.getTarget().getClass().getName();
+        // 请求的方法名
+        String methodName = point.getSignature().getName();
+        // 请求的方法参数值
+        String args = Arrays.toString(point.getArgs());
+        log.info("环绕前==类名：{},方法名：{},参数：{}", className, methodName, args);
+        long beginTime = System.currentTimeMillis();
+        Object result = point.proceed();
+        long endTime = System.currentTimeMillis();
+        long time = endTime-beginTime;
+        //        if(result == null){
+//            log.info("环绕后==方法名：{},执行时间：{} ms,返回结果：{}", methodName, time, result);
+//        }else if(result != null){
+//            log.info("环绕后==方法名：{},执行时间：{} ms,返回结果：{}", methodName, time, result.toString());
+//        }
+        log.info("环绕后==方法名：{},执行时间：{} ms", methodName, time);
+        return result;
+    }
+
+}

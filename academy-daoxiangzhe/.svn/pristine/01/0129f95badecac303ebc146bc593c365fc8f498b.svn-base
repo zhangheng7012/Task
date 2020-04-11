@@ -1,0 +1,99 @@
+package com.dxz.admin.service.impl;
+
+import com.dxz.admin.dao.UserMapper;
+import com.dxz.admin.pojo.User;
+import com.dxz.admin.pojo.UserExample;
+import com.dxz.admin.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.List;
+
+@Service
+public class UserServiceImpl implements UserService {
+
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
+    @Resource
+    UserMapper userMapper;
+
+    @Override
+    public List<User> findUserListSearch(User user) {
+        List<User> users = userMapper.findUserListSearch(user);
+        log.info("查询的用户列表长度：{}",users.size());
+        return users;
+    }
+
+    @Override
+    public Boolean updateUserStatus(User user) {
+        user.setUpdateAt(System.currentTimeMillis());
+        int row = userMapper.updateByPrimaryKeySelective(user);
+        if(row > 0){
+            return true;
+        }else {
+            return false;
+        }
+    }
+
+    @Override
+    public User findTeacherByName(User user) {
+        UserExample example = new UserExample();
+        example.createCriteria().andSortEqualTo(user.getSort());
+        example.createCriteria().andNameEqualTo(user.getName());
+        // 根据名称查询，这里不是模糊查询
+        List<User> users = userMapper.selectByExample(example);
+
+        //这个地方只能用size来判断，如果判断是否为null的话会报错的，因为list集合本身是不会为null的
+        if(users.size() == 1){
+            log.info("根据名称查找老师信息：{}",users.get(0));
+            return users.get(0);
+        }else{
+            return null;
+        }
+    }
+
+    @Override
+    public Long addUser(User user) {
+
+        user.setScore(0L);
+        // 用户状态，1为解冻，0为冻结，默认为1
+        user.setStatus(1);
+        user.setSignSum(0L);
+        user.setSignCon(0L);
+        user.setSignNowCon(0L);
+
+        user.setUpdateId(user.getCreateId());
+        user.setCreateAt(System.currentTimeMillis());
+        user.setUpdateAt(System.currentTimeMillis());
+        int aa = userMapper.insertSelective(user);
+        log.info("插入用户ID：{}",user.getId());
+
+        return user.getId();
+    }
+
+    @Override
+    public Boolean deleteUser(Long id) {
+        int row = userMapper.deleteByPrimaryKey(id);
+        if(row > 0){
+            return true;
+        }else {
+            return false;
+        }
+    }
+
+    @Override
+    public Boolean deleteTeacher(Long id) {
+        UserExample example = new UserExample();
+        example.createCriteria().andIdEqualTo(id);
+        // 用户分类，1是学生，2是老师
+        example.createCriteria().andSortEqualTo(2);
+        int row = userMapper.deleteByExample(example);
+        if(row > 0){
+            return true;
+        }else {
+            return false;
+        }
+    }
+}

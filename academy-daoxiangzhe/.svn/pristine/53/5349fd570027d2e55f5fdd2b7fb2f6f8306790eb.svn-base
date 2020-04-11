@@ -1,0 +1,86 @@
+package com.dxz.home.result;
+
+public enum CodeInfo {
+
+    /**
+     * @Description: 请求成功
+     */
+    SUCCESS(1200, "请求成功"),
+    /**
+     * @Description: 集中的错误类型
+     */
+
+
+    /**
+     * @Description: 前台登录 和 个人中心模块
+     */
+
+//    USERZONE(1,"获取个人中心信息"),
+//    USERINFO(1,"获取个人资料"),
+//    USERZONEINTRODUCE(1,"成功修改个人简介"),
+//    USERPUTINFO(1,"成功修改个人资料"),
+//    USERSIGNINFOSUCCESS(1,"成功获取签到信息"),
+//    USERSIGNSUCCESS(1,"签到成功"),
+//    LOGIN(1001,"用户第一次登录，注册成功"),
+//    USERZONEINTRODUCEFAIL(1002,"个人简历修改失败"),
+//    USERIMGEMPTY(1003,"头像不能为空"),
+//    USERNAMEEMPTY(1004,"昵称不能为空"),
+//    USERSCHOOLEMPTY(1005,"学校不能为空"),
+//    USERSPLACEEMPTY(1006,"地点不能为空"),
+//    USERSINFOFAIL(1007,"个人资料修改失败"),
+//    USERINFOSIGNFAIL(1008,"获取签到信息失败"),
+//    USERSIGNFAIL(1009,"获取签到信息失败"),
+//    SIGNFAIL(1010,"签到失败，今天已签到"),
+    /**
+     * @Description: 用户管理模块
+     */
+    USER_LIST_GET_FAIL(4001,"用户列表获取失败"),
+    USER_STATUS_UPDATE_FAIL(4002,"用户状态修改失败"),
+    USER_FIND_NULL(4003,"无符合条件的用户"),
+    USER_MSG_GET_FAIL(4004,"用户信息获取失败"),
+    USER_UPDATE_FAIL(4005,"用户信息编辑失败"),
+
+    USER_CODE_TIMES(4006,"短时间验证次数过多"),
+    USER_PHONE_CODE_GET_FAIL(4007,"获取手机验证码失败"),
+    USER_EMAIL_CODE_GET_FAIL(4008,"获取邮箱验证码失败"),
+    USER_PHONE_BIND_FAIL(4009,"手机绑定失败"),
+    USER_EMAIL_BIND_FAIL(4010,"邮箱绑定失败"),
+    USER_CODE_FAIL(4011,"验证码异常");
+
+    private int code;
+    private String msg;
+
+    private CodeInfo(int code,String msg) {
+        this.setCode(code);
+        this.setMsg(msg);
+    }
+
+    public int getCode() {
+        return code;
+    }
+
+    public void setCode(int code) {
+        this.code = code;
+    }
+
+    public String getMsg() {
+        return msg;
+    }
+
+    public void setMsg(String msg) {
+        this.msg = msg;
+    }
+
+    @Override
+    public String toString() {
+        return "[" + this.code + "]" + this.msg;
+    }
+
+//    @Override
+//    public String toString() {
+//        return "CodeInfo{" +
+//                "code=" + code +
+//                ", msg='" + msg + '\'' +
+//                '}';
+//    }
+}

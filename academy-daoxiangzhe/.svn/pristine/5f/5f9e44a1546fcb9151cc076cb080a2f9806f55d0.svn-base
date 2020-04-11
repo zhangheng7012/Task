@@ -1,0 +1,99 @@
+package com.dxz.admin.shiro;
+
+import com.dxz.admin.pojo.Manager;
+import com.dxz.admin.service.PermissionService;
+import com.dxz.admin.utils.JedisUtil;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authz.UnauthorizedException;
+import org.apache.shiro.subject.Subject;
+import org.apache.shiro.web.filter.PathMatchingFilter;
+import org.apache.shiro.web.util.WebUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import java.util.List;
+import java.util.Set;
+
+public class URLPathMatchingFilter extends PathMatchingFilter {
+
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
+    @Autowired
+    private PermissionService permissionService;
+
+    private JedisUtil jedisUtil = new JedisUtil();
+
+    @Override
+    protected boolean onPreHandle(ServletRequest request, ServletResponse response, Object mappedValue)
+            throws Exception {
+
+        if(null==permissionService)
+            permissionService = SpringContextUtils.getContext().getBean(PermissionService.class);
+
+        String str = getPathWithinApplication(request);
+
+        // 截取部分字符串，即“/a/u/role/11”，截取最后一个“/” 之前的字符串，为“/a/u/role”
+        String strURI = StringUtils.substringBeforeLast(str, "/");
+
+        String requestURI = "";
+        // 若小于5，则为非截取字符串，即“/a/u/role”
+        if(strURI.length() < 5){
+            requestURI = str;
+        }
+        // 若大于5，小于13，则为截取 一次 后的字符串，即“/a/u/manager/11” --> “/a/u/manager”
+        if(5 < strURI.length() && strURI.length() < 13){
+            requestURI = strURI;
+        }
+        // 若大于13，则为截取 两次 后的字符串，即“/a/u/manager/list/search” --> “/a/u/manager”
+        if(strURI.length() > 13){
+            requestURI = StringUtils.substringBeforeLast(strURI, "/");
+        }
+        log.info("当前请求URI：{}",requestURI);
+
+        Subject subject = SecurityUtils.getSubject();
+        // 如果没有登录，就跳转到登录页面
+        if (!subject.isAuthenticated()) {
+            WebUtils.issueRedirect(request, response, "/a/toLogin");
+            return false;
+        }
+
+        // 看看这个路径权限里有没有维护，如果没有维护，一律放行(也可以改为一律不放行)
+        // 即访问的 URL 不在数据库中，则任何角色都可以访问，
+        // 若 URL 在数据库，就需要角色拥有对应URL权限才能访问
+        boolean needInterceptor = permissionService.needInterceptor(requestURI);
+        log.info("当前请求URI是否维护：{}",needInterceptor);
+
+        if (!needInterceptor) {
+            return true;
+        } else {
+            boolean hasPermission = false;
+            Manager manager = (Manager)subject.getPrincipal();
+            log.info("拦截的账号名称：{}",manager.getName());
+//            List<String> permissionUrls = permissionService.listPermissionURLs(manager.getName());
+            List<String> permissionUrls = jedisUtil.getList(manager.getName());
+            log.info("拦截的权限URL：{}",permissionUrls);
+
+            for (String url : permissionUrls) {
+                // 这就表示当前用户有这个权限
+                if (url.equals(requestURI)) {
+                    hasPermission = true;
+                    break;
+                }
+            }
+            if (hasPermission)
+                return true;
+            else {
+                UnauthorizedException ex = new UnauthorizedException("当前账号没有访问路径 " + requestURI + " 的权限");
+                log.info("当前账号没有访问路径 {} 的权限",requestURI);
+//                subject.getSession().setAttribute("ex", ex);
+                WebUtils.issueRedirect(request, response, "/a/unauthorized");
+                return false;
+            }
+        }
+    }
+}

@@ -1,0 +1,130 @@
+package com.dxz.admin.result;
+
+public enum CodeInfo {
+
+    /**
+     * @Description: 请求成功
+     */
+    SUCCESS(1200, "请求成功"),
+    /**
+     * @Description: 集中的错误类型
+     */
+    TYPEWRONG(1001, "数据类型转换异常"),
+    PARAMWRONG(1002, "没有必要的参数"),
+    SOMETHINGWRONG(1003, "未知异常"),
+    UPFAIL(1004, "上传文件异常"),
+    SIZEFAIL(1005, "上传文件大小过大"),
+    TYPEFAIL(1006, "上传文件类型异常"),
+    UPIMGEMPTY(1007, "上传文件为空"),
+    /**
+     * @Description: 前台登录 和 个人中心模块
+     */
+    USERZONE(1,"获取个人中心信息"),
+    USERINFO(1,"获取个人资料"),
+    USERZONEINTRODUCE(1,"成功修改个人简介"),
+    USERPUTINFO(1,"成功修改个人资料"),
+    USERSIGNINFOSUCCESS(1,"成功获取签到信息"),
+    USERSIGNSUCCESS(1,"签到成功"),
+    LOGIN(1001,"用户第一次登录，注册成功"),
+    USERZONEINTRODUCEFAIL(1002,"个人简历修改失败"),
+    USERIMGEMPTY(1003,"头像不能为空"),
+    USERNAMEEMPTY(1004,"昵称不能为空"),
+    USERSCHOOLEMPTY(1005,"学校不能为空"),
+    USERSPLACEEMPTY(1006,"地点不能为空"),
+    USERSINFOFAIL(1007,"个人资料修改失败"),
+    USERINFOSIGNFAIL(1008,"获取签到信息失败"),
+    USERSIGNFAIL(1009,"获取签到信息失败"),
+    SIGNFAIL(1010,"签到失败，今天已签到"),
+    /**
+     * @Description: 用户管理模块
+     */
+    USERLIST(1,"获取用户列表"),
+    USERINFOADMINSUCCESS(1,"获取用户详细信息成功"),
+    USERSTATESUCCESS(1,"修改用户状态成功"),
+    USERSTATEFAIL(2001,"修改用户状态失败"),
+    USERINFOADMINFAIL(2002,"获取用户详细信息失败"),
+    /**
+     * @Description: 权限管理模块
+     */
+    PERMISSION_LIST_GET_FAIL(4001,"权限列表获取失败"),
+
+
+    /**
+     * @Description: 角色管理模块
+     */
+    ROLE_LIST_GET_FAIL(3001,"角色列表获取失败"),
+    ROLE_NAME_GET(3002,"角色名已存在"),
+    ROLE_INSTER_FAIL(3003,"角色插入失败"),
+    ROLE_DELETE_FAIL(3004,"角色删除失败"),
+    ROLE_NULL_FAIL(3005,"该角色不存在"),
+    ROLE_MSG_GET_FAIL(3006,"角色信息获取失败"),
+    ROLE_UPDATE_FAIL(3007,"角色编辑失败"),
+
+
+    PERMS_INFO_GET_FAIL(7003,"所有权限信息获取失败"),
+    ROLE_PERM_INFO_GET_FAIL(7004,"角色的权限信息保存失败"),
+    ROLE_INFO_SAVE_FAIL(7005,"角色信息保存失败"),
+    ROLE_PERM_GET_FAIL(7006,"未对该角色选择权限"),
+
+    /**
+     * @Description: 账户管理模块
+     */
+    MANAGER_LOGIN_SUCCESS(1200,"账号登录成功"),
+    MANAGER_LOGOUT(1200,"账号退出登录成功"),
+    MANAGER_PASSWORD_FAIL(2001,"登录失败，密码错误！"),
+    MANAGER_LOGIN_FAIL(2002,"登录失败，该账户已被冻结"),
+    MANAGER_NULL_FAIL(2003,"该账户不存在"),
+    MANAGER_NOT_LOGIN(2004,"账号未登录"),
+    MANAGER_UNAUTHORIZED(2005,"账号未授权"),
+    MANAGER_INSTER_FAIL(2006,"账户插入失败"),
+    MANAGER_NAME_GET(2007,"用户名已存在"),
+    MANAGER_LIST_GET_FAIL(2008,"账户列表获取失败"),
+    MANAGER_DELETE_FAIL(2009,"账户删除失败"),
+    MANAGER_UPDATE_FAIL(2010,"账户编辑失败"),
+    MANAGER_MSG_GET_FAIL(2011,"账户信息获取失败"),
+
+
+
+//    ROLES_INFO_GET_FAIL(8003,"所有角色信息获取失败"),
+    MANAGER_PERM_INFO_GET_FAIL(8004,"账户的权限信息保存失败"),
+    MANAGER_INFO_SAVE_FAIL(8005,"账户信息保存失败"),
+    MANAGER_INFO_NOT_ALL(8006,"用户信息不完整"),
+    MANAGER_PASSWORD(8008,"两次密码不一致");
+
+    private int code;
+    private String msg;
+
+    private CodeInfo(int code,String msg) {
+        this.setCode(code);
+        this.setMsg(msg);
+    }
+
+    public int getCode() {
+        return code;
+    }
+
+    public void setCode(int code) {
+        this.code = code;
+    }
+
+    public String getMsg() {
+        return msg;
+    }
+
+    public void setMsg(String msg) {
+        this.msg = msg;
+    }
+
+    @Override
+    public String toString() {
+        return "[" + this.code + "]" + this.msg;
+    }
+
+//    @Override
+//    public String toString() {
+//        return "CodeInfo{" +
+//                "code=" + code +
+//                ", msg='" + msg + '\'' +
+//                '}';
+//    }
+}

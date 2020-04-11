@@ -1,0 +1,140 @@
+package com.dxz.admin.service.impl;
+
+import com.dxz.admin.dao.ManagerMapper;
+import com.dxz.admin.dao.ManagerRoleMapper;
+import com.dxz.admin.pojo.Manager;
+import com.dxz.admin.pojo.ManagerExample;
+import com.dxz.admin.pojo.ManagerRole;
+import com.dxz.admin.pojo.ManagerRoleExample;
+import com.dxz.admin.service.ManagerService;
+import org.apache.logging.log4j.LogManager;
+import org.apache.shiro.crypto.hash.SimpleHash;
+import org.apache.shiro.util.ByteSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.List;
+
+@Service
+public class ManagerServiceImpl implements ManagerService {
+
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
+    @Resource
+    ManagerMapper managerMapper;
+    @Resource
+    ManagerRoleMapper managerRoleMapper;
+
+    @Override
+    public Manager findManagerByName(String name) {
+        // 根据名称查询，这里不是模糊查询
+        Manager manager = managerMapper.findManagerByName(name);
+        return manager;
+    }
+
+    @Override
+    public List<Manager> findManagerListSearch(Manager manager) {
+        List<Manager> managers = managerMapper.findManagerListSearch(manager);
+        return managers;
+    }
+
+    @Transactional
+    @Override
+    public Long addManager(Manager manager) {
+        // 加盐加密
+        String hashAlgorithmName = "md5";
+        String password = manager.getPassword();
+        int hashIterations = 7;
+        ByteSource salt = ByteSource.Util.bytes(manager.getName());// 账号名称为盐
+        String passwordMD5 = new SimpleHash(hashAlgorithmName, password, salt, hashIterations).toHex();
+        // 将加密密码、盐存入数据库
+        manager.setPassword(passwordMD5);
+        manager.setSalt(manager.getName());
+
+        manager.setUpdateId(manager.getCreateId());
+        manager.setCreateAt(System.currentTimeMillis());
+        manager.setUpdateAt(System.currentTimeMillis());
+        Long aa = managerMapper.insertSelective(manager);
+        log.info("插入账号ID：{}",manager.getId());
+
+        return manager.getId();
+    }
+
+    @Override
+    public List<Long> addManagerRole(Long managerId, Long createId, List<Long> roleIdList) {
+        List<Long> addManagerRoleId = new ArrayList<>();
+
+        if(roleIdList.size() == 0){
+            log.info("未选择角色，没有插入账号-角色关系");
+            return addManagerRoleId;
+        }
+        for (Long roleId : roleIdList) {
+            ManagerRole managerRole = new ManagerRole();
+            managerRole.setMid(managerId);
+            managerRole.setRid(roleId);
+
+            managerRole.setCreateId(createId);
+            managerRole.setUpdateId(createId);
+            managerRole.setCreateAt(System.currentTimeMillis());
+            managerRole.setUpdateAt(System.currentTimeMillis());
+            Long aa = managerRoleMapper.insertSelective(managerRole);
+//            log.info("插入账号-角色关系ID：{}",managerRole.getId());
+
+            addManagerRoleId.add(managerRole.getId());
+        }
+        return addManagerRoleId;
+    }
+
+    @Override
+    public Boolean deleteManager(Long id) {
+        // 联表删除账号、账号-角色关系
+        Long row = managerMapper.deleteByManagerId(id);
+        log.info("删除数据行数：{}",row);
+        if(row > 0){
+            return true;
+        }else {
+            return false;
+        }
+    }
+
+    @Transactional
+    @Override
+    public Boolean updateManager(Manager manager,List<Long> roleIdList) {
+
+        manager.setUpdateAt(System.currentTimeMillis());
+        Long row = managerMapper.updateByPrimaryKeySelective(manager);
+//        log.info("编辑账号行数：{}",row);
+
+        ManagerRoleExample example2 = new ManagerRoleExample();
+        example2.createCriteria().andMidEqualTo(manager.getId());
+        Long row2 = managerRoleMapper.deleteByExample(example2);
+//        log.info("删除账号-角色关系行数：{}",row2);
+
+        List<Long> ids = new ArrayList<>();
+
+        for (Long roleId : roleIdList) {
+            ManagerRole managerRole = new ManagerRole();
+            managerRole.setMid(manager.getId());
+            managerRole.setRid(roleId);
+
+            managerRole.setCreateId(manager.getUpdateId());
+            managerRole.setUpdateId(manager.getUpdateId());
+            managerRole.setCreateAt(System.currentTimeMillis());
+            managerRole.setUpdateAt(System.currentTimeMillis());
+            Long row3 = managerRoleMapper.insertSelective(managerRole);
+
+            ids.add(managerRole.getId());
+//            log.info("插入账号-角色关系ID：{}",managerRole.getId());
+        }
+        // 都成功，才是编辑成功
+        if(row > 0 && row2 > 0 && ids.size() >= 0){
+            return true;
+        }else {
+            return false;
+        }
+    }
+}

@@ -1,0 +1,85 @@
+package com.dxz.home.utils;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+
+@Component
+public class TimeUtil {
+
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
+    // 获取 昨天零点零分零秒 时间戳
+    public Long yesterdayZeroTime(){
+        Calendar cal = Calendar.getInstance();
+        // 获取年，如果在clear()方法后获取，将获取1970年
+        int year = cal.get(Calendar.YEAR);
+        // 在使用set方法之前，必须先clear一下，否则很多信息会继承自系统当前时间
+        cal.clear();
+        cal.set(Calendar.YEAR,year);//控制年
+        // 控制月份，0表示1月份，这里设置为当月
+        cal.set(Calendar.MONTH,cal.get(Calendar.MONTH) + 1);
+        // 控制天，这里设置为昨天的天数，1号也可以设置成上个月末
+        cal.set(Calendar.DAY_OF_MONTH, cal.get(Calendar.DAY_OF_MONTH) -1 );
+        cal.set(Calendar.HOUR_OF_DAY, 0);//控制时
+        cal.set(Calendar.MINUTE, 0);//控制分
+        cal.set(Calendar.SECOND, 0);//控制秒
+        cal.set(Calendar.MILLISECOND, 0);//控制毫秒
+        Long yesterdayTime = cal.getTimeInMillis();
+        log.info("昨天零点零分零秒 时间戳：{}ms",yesterdayTime);
+        return yesterdayTime;
+    }
+
+    // 获取 今天零点零分零秒 时间戳
+    public Long todayZeroTime(){
+        Calendar ca2 = Calendar.getInstance();
+        int year2 = ca2.get(Calendar.YEAR);
+        ca2.clear();
+        ca2.set(Calendar.YEAR,year2);
+        ca2.set(Calendar.MONTH,ca2.get(Calendar.MONTH) + 1);
+        ca2.set(Calendar.HOUR_OF_DAY, 0);
+        ca2.set(Calendar.MINUTE, 0);
+        ca2.set(Calendar.SECOND, 0);
+        ca2.set(Calendar.MILLISECOND, 0);
+        Long todayTime = ca2.getTimeInMillis();
+        log.info("今天零点零分零秒 时间戳：{}ms",todayTime);
+        return todayTime;
+    }
+
+    // 获取 上个月一号零点零分零秒 时间戳
+    public Long oldMonthZeroTime(){
+        Calendar cal = Calendar.getInstance();
+        int year = cal.get(Calendar.YEAR);
+        cal.clear();
+        cal.set(Calendar.YEAR,year);
+        // 控制月份，0表示1月份，这里设置为上个月
+        cal.set(Calendar.MONTH,cal.get(Calendar.MONTH));
+        cal.set(Calendar.DAY_OF_MONTH, 1 );
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        log.info("上个月一号零点零分零秒 时间戳：{}ms",cal.getTimeInMillis());
+        return cal.getTimeInMillis();
+    }
+
+    // 获取 当月一号零点零分零秒 时间戳
+    public Long nowMonthZeroTime(){
+        Calendar ca2 = Calendar.getInstance();
+        int year2 = ca2.get(Calendar.YEAR);
+        ca2.clear();
+        ca2.set(Calendar.YEAR,year2);
+        // 控制月份，0表示1月份，这里设置为当月
+        ca2.set(Calendar.MONTH,ca2.get(Calendar.MONTH) + 1);
+        ca2.set(Calendar.DAY_OF_MONTH, 1 );
+        ca2.set(Calendar.HOUR_OF_DAY, 0);
+        ca2.set(Calendar.MINUTE, 0);
+        ca2.set(Calendar.SECOND, 0);
+        ca2.set(Calendar.MILLISECOND, 0);
+        log.info("当月一号零点零分零秒 时间戳：{}ms",ca2.getTimeInMillis());
+        return ca2.getTimeInMillis();
+    }
+}

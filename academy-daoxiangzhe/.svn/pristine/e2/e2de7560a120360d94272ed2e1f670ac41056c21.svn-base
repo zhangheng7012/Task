@@ -1,0 +1,333 @@
+package com.dxz.home.controller;
+
+import com.alibaba.fastjson.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+@RestController
+public class JsonHomeController {
+
+    // 个人中心
+    @RequestMapping(value = "/b/user1/{id}",method = RequestMethod.GET)
+    public String getUser(Long id){
+
+        return " {\n" +
+                "    \"code\": 1200,\n" +
+                "    \"msg\": \"success\",\n" +
+                "    \"data\": {\n" +
+                "        \"id\": 1,\n" +
+                "        \"name\": \"用户一二\",\n" +
+                "        \"avatarUrl\": \"http://jnshu.com/image/111.jpg\",\n" +
+                "        \"grade\": 3,\n" +
+                "        \"score\": 120\n" +
+                "    }\n" +
+                "  }";
+    }
+
+    @RequestMapping(value = "/b/user1/{id}",method = RequestMethod.PUT)
+    public String updateUser(Long id,String name, String avatarUrl, String grade){
+
+        return " {\n" +
+                "    \"code\": 1200,\n" +
+                "    \"msg\": \"success\"\n" +
+                "  }";
+    }
+
+    // 用户（手机号、邮箱）绑定
+    @RequestMapping(value = "/b/user/phone1",method = RequestMethod.POST)
+    public String getPhoneCode(Long phone){
+
+        return " {\n" +
+                "    \"code\": 1200,\n" +
+                "    \"msg\": \"success\"\n" +
+                "  }";
+    }
+
+    @RequestMapping(value = "/b/user/phone1/verify",method = RequestMethod.POST)
+    public String verifyPhoneCode(Long phone,Integer code){
+
+        return " {\n" +
+                "    \"code\": 1200,\n" +
+                "    \"msg\": \"success\"\n" +
+                "  }";
+    }
+
+    @RequestMapping(value = "/b/user/email1",method = RequestMethod.POST)
+    public String getEmailCode(String email){
+
+        return " {\n" +
+                "    \"code\": 1200,\n" +
+                "    \"msg\": \"success\"\n" +
+                "  }";
+    }
+
+    @RequestMapping(value = "/b/user/email1/verify",method = RequestMethod.POST)
+    public String verifyEmailCode(String email,Integer code){
+
+        return " {\n" +
+                "    \"code\": 1200,\n" +
+                "    \"msg\": \"success\"\n" +
+                "  }";
+    }
+
+    // 前台课程展示
+    @RequestMapping(value = "/b/video1/list/search",method = RequestMethod.GET)
+    public String homeVideoList(@RequestParam(required = false,defaultValue = "1",value = "pn")
+                                Integer pageNumber, Integer pageSize, Integer grade,Integer subject){
+
+        return "{\n" +
+                "    \"code\": 1200,\n" +
+                "    \"msg\": \"success\",\n" +
+                "    \"data\": {\n" +
+                "        \"banners\": [\n" +
+                "            {\n" +
+                "                \"id\": 5,\n" +
+                "                \"bannerUrl\": \"http://jnshu.com/image/555.jpg\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "                \"id\": 6,\n" +
+                "                \"bannerUrl\": \"http://jnshu.com/image/333.jpg\"\n" +
+                "            }\n" +
+                "        ],\n" +
+                "        \"collectUser\": [\n" +
+                "            {\n" +
+                "                \"vid\": 1\n" +
+                "            },\n" +
+                "            {\n" +
+                "                \"vid\": 3\n" +
+                "            }\n" +
+                "        ],\n" +
+                "        \"loveUser\": [\n" +
+                "            {\n" +
+                "                \"vid\": 2\n" +
+                "            },\n" +
+                "            {\n" +
+                "                \"vid\": 3\n" +
+                "            }\n" +
+                "        ],\n" +
+                "        \"videos\": {\n" +
+                "            \"pageNum\": 1,\n" +
+                "            \"pageSize\": 10,\n" +
+                "            \"total\": 2,\n" +
+                "            \"pages\": 1,\n" +
+                "            \"videoList\": [\n" +
+                "                {\n" +
+                "                    \"teacher\": {\n" +
+                "                        \"id\": 1,\n" +
+                "                        \"name\": \"老师一\",\n" +
+                "                        \"avatarUrl\": \"http://jnshu.com/image/111.jpg\"\n" +
+                "                    },\n" +
+                "                    \"video\": {\n" +
+                "                        \"id\": 1,\n" +
+                "                        \"title\": \"视频一\",\n" +
+                "                        \"introduction\": \"我是简介\",\n" +
+                "                        \"videoUrl\": \"http://jnshu.com/111.mp4\",\n" +
+                "                        \"loveSum\": 235,\n" +
+                "                        \"collectSum\": 222,\n" +
+                "                        \"teacherId\": 2,\n" +
+                "                        \"updateAt\": 1234567890123\n" +
+                "                    }\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"teacher\": {\n" +
+                "                        \"id\": 2,\n" +
+                "                        \"name\": \"老师一\",\n" +
+                "                        \"avatarUrl\": \"http://jnshu.com/image/111.jpg\"\n" +
+                "                    },\n" +
+                "                    \"video\": {\n" +
+                "                        \"id\": 1,\n" +
+                "                        \"title\": \"视频一\",\n" +
+                "                        \"introduction\": \"我是简介\",\n" +
+                "                        \"videoUrl\": \"http://jnshu.com/111.mp4\",\n" +
+                "                        \"loveSum\": 235,\n" +
+                "                        \"collectSum\": 222,\n" +
+                "                        \"teacherId\": 2,\n" +
+                "                        \"updateAt\": 1234567890123\n" +
+                "                    }\n" +
+                "                }\n" +
+                "            ]\n" +
+                "        }\n" +
+                "    }\n" +
+                "  }";
+    }
+
+    @RequestMapping(value = "/b/video1/{id}",method = RequestMethod.GET)
+    public String getVideo(Long id){
+
+        return "{\n" +
+                "    \"code\": 1200,\n" +
+                "    \"msg\": \"success\",\n" +
+                "    \"data\": {\n" +
+                "        \"video\": {\n" +
+                "            \"id\": 1,\n" +
+                "            \"title\": \"视频一\",\n" +
+                "            \"introduction\": \"我是简介\",\n" +
+                "            \"videoUrl\": \"http://jnshu.com/video/sss.mp4\",\n" +
+                "            \"content\": \"我是正文\",\n" +
+                "            \"loveSum\": 122,\n" +
+                "            \"collectSum\": 222,\n" +
+                "            \"teacherName\": \"老师\",\n" +
+                "            \"updateAt\": 1234567890123\n" +
+                "        },\n" +
+                "        \"collectUser\": [\n" +
+                "            {\n" +
+                "                \"vid\": 1\n" +
+                "            },\n" +
+                "            {\n" +
+                "                \"vid\": 2\n" +
+                "            }\n" +
+                "        ],\n" +
+                "        \"loveUser\": [\n" +
+                "            {\n" +
+                "                \"vid\": 3\n" +
+                "            },\n" +
+                "            {\n" +
+                "                \"vid\": 4\n" +
+                "            }\n" +
+                "        ]\n" +
+                "    }\n" +
+                "  }";
+    }
+
+    // 课程收藏、点赞
+    @RequestMapping(value = "/b/video1/connection",method = RequestMethod.POST)
+    public String addConnection(Long uid,Long vid,Integer status){
+
+        return "{\n" +
+                "    \"code\": 1200,\n" +
+                "    \"msg\": \"success\"\n" +
+                "  }";
+    }
+
+    @RequestMapping(value = "/b/video1/connection",method = RequestMethod.DELETE)
+    public String deleteConnection(Long uid,Long vid,Integer status){
+
+        return "{\n" +
+                "    \"code\": 1200,\n" +
+                "    \"msg\": \"success\"\n" +
+                "  }";
+    }
+
+    @RequestMapping(value = "/b/video1/collection",method = RequestMethod.GET)
+    public String collectVideoList(@RequestParam(required = false,defaultValue = "1",value = "pn")
+                            Integer pageNumber, Integer pageSize){
+
+        return "{\n" +
+                "    \"code\": 1200,\n" +
+                "    \"msg\": \"success\",\n" +
+                "    \"data\": {\n" +
+                "        \"teacher\": {\n" +
+                "            \"id\": 1,\n" +
+                "            \"name\": \"老师一\",\n" +
+                "            \"avatarUrl\": \"http://jnshu.com/image/111.jpg\"\n" +
+                "        },\n" +
+                "        \"loveUser\": [\n" +
+                "            {\n" +
+                "                \"vid\": 2\n" +
+                "            },\n" +
+                "            {\n" +
+                "                \"vid\": 3\n" +
+                "            }\n" +
+                "        ],\n" +
+                "        \"videos\": {\n" +
+                "            \"pageNum\": 1,\n" +
+                "            \"pageSize\": 10,\n" +
+                "            \"total\": 2,\n" +
+                "            \"pages\": 1,\n" +
+                "            \"videoList\": [\n" +
+                "                {\n" +
+                "                    \"id\": 1,\n" +
+                "                    \"title\": \"视频一\",\n" +
+                "                    \"introduction\": \"我是简介\",\n" +
+                "                    \"videoUrl\": \"http://jnshu.com/111.mp4\",\n" +
+                "                    \"loveSum\": 102,\n" +
+                "                    \"collectSum\": 222,\n" +
+                "                    \"teacherId\": 2,\n" +
+                "                    \"updateAt\": 1234567890123\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"id\": 2,\n" +
+                "                    \"title\": \"视频二\",\n" +
+                "                    \"introduction\": \"我是简介\",\n" +
+                "                    \"videoUrl\": \"http://jnshu.com/222.mp4\",\n" +
+                "                    \"loveSum\": 102,\n" +
+                "                    \"collectSum\": 111,\n" +
+                "                    \"teacherId\": 3,\n" +
+                "                    \"updateAt\": 1234567890123\n" +
+                "                }\n" +
+                "            ]\n" +
+                "        }\n" +
+                "    }\n" +
+                "  }";
+    }
+
+    // 签到
+    @RequestMapping(value = "/b/sign1/{id}",method = RequestMethod.GET)
+    public String toUserSign(Long id){
+
+        return "{\n" +
+                "    \"code\": 1200,\n" +
+                "    \"msg\": \"success\",\n" +
+                "    \"data\": {\n" +
+                "        \"todaySign\": 0,\n" +
+                "        \"user\": {\n" +
+                "            \"id\": 1,\n" +
+                "            \"name\": \"老师一\",\n" +
+                "            \"avatarUrl\": \"http://jnshu.com/image/111.jpg\",\n" +
+                "            \"score\": 123,\n" +
+                "            \"signSum\": 66,\n" +
+                "            \"signCon\": 12,\n" +
+                "            \"signNowCon\": 6\n" +
+                "        },\n" +
+                "        \"monthSign\": [\n" +
+                "            {\n" +
+                "                \"signTime\": 1234567890123\n" +
+                "            },\n" +
+                "            {\n" +
+                "                \"signTime\": 1234567890456\n" +
+                "            }\n" +
+                "        ]\n" +
+                "    }\n" +
+                "  }";
+    }
+
+    @RequestMapping(value = "/b/sign1/{id}",method = RequestMethod.POST)
+    public String userSign(Long id){
+
+        return "{\n" +
+                "    \"code\": 1200,\n" +
+                "    \"msg\": \"success\",\n" +
+                "    \"data\": {\n" +
+                "        \"score\": 126,\n" +
+                "        \"signSum\": 67,\n" +
+                "        \"signCon\": 12,\n" +
+                "        \"signNowCon\": 7\n" +
+                "    }\n" +
+                "  }";
+    }
+
+    // 微信登录授权
+    @RequestMapping(value = "/b/login1",method = RequestMethod.POST)
+    public String userLogin(Long userId,Long videoId,Integer status){
+
+        return "{\n" +
+                "    \"code\": 1200,\n" +
+                "    \"msg\": \"success\",\n" +
+                "    \"data\": {\n" +
+                "        \"id\": 1,\n" +
+                "        \"name\": \"微信名\",\n" +
+                "        \"avatarUrl\": \"http://jnshu.com/image/11.jpg\",\n" +
+                "        \"status\": 1\n" +
+                "    }\n" +
+                "  }";
+    }
+
+
+}

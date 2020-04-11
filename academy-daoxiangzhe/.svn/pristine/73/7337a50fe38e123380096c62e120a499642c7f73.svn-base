@@ -1,0 +1,275 @@
+package com.dxz.admin.pojo;
+
+import org.hibernate.validator.constraints.Length;
+import org.hibernate.validator.constraints.Range;
+
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.groups.Default;
+import java.io.Serializable;
+
+public class Course implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    public interface search extends Default{}
+
+    public interface insert extends Default{}
+
+    public interface update extends Default{}
+
+    @Override
+    public String toString() {
+        return "Course{" +
+                "id=" + id +
+                ", title='" + title + '\'' +
+                ", sort=" + sort +
+                ", bannerUrl='" + bannerUrl + '\'' +
+                ", grade=" + grade +
+                ", subject=" + subject +
+                ", introduction='" + introduction + '\'' +
+                ", videoUrl='" + videoUrl + '\'' +
+                ", content='" + content + '\'' +
+                ", loveSum=" + loveSum +
+                ", collectSum=" + collectSum +
+                ", status=" + status +
+                ", teacherId=" + teacherId +
+                ", teacherName=" + teacherName +
+                ", createAt=" + createAt +
+                ", createId=" + createId +
+                ", updateAt=" + updateAt +
+                ", updateId=" + updateId +
+                '}';
+    }
+    @NotNull(message = "视频id不能为空",groups = {update.class})
+    private Long id;
+
+    @NotBlank(message = "课程标题不能为空",groups = {insert.class,update.class})
+    @Length(min = 1, max = 40, message = "课程标题长度为1-40",groups = Default.class)
+    private String title;
+
+    @NotNull(message = "分类数字不能为空",groups = {insert.class,update.class})
+    @Range(min = 1, max = 2, message = "分类数字应为1-2",groups = Default.class)
+    private Integer sort;
+
+    private String bannerUrl;
+
+    @NotNull(message = "年级数字不能为空",groups = {insert.class,update.class})
+    @Range(min = 1, max = 6, message = "年级数字应为1-6",groups = Default.class)
+    private Integer grade;
+
+    @NotNull(message = "科目数字不能为空",groups = {insert.class,update.class})
+    @Range(min = 1, max = 6, message = "科目数字应为1-6",groups = Default.class)
+    private Integer subject;
+
+    @NotBlank(message = "简介不能为空",groups = {insert.class,update.class})
+    @Length(min = 1, max = 140, message = "简介长度为1-140",groups = {insert.class,update.class})
+    private String introduction;
+
+    @NotBlank(message = "视频url不能为空",groups = {insert.class,update.class})
+    private String videoUrl;
+
+    @NotBlank(message = "正文内容不能为空",groups = {insert.class,update.class})
+    private String content;
+
+    private Long loveSum;
+    private Long minLoveSum;
+    private Long maxLoveSum;
+
+    private Long collectSum;
+    private Long minCollectSum;
+    private Long maxCollectSum;
+
+    public Long getLoveSum() {
+        return loveSum;
+    }
+
+    public void setLoveSum(Long loveSum) {
+        this.loveSum = loveSum;
+    }
+
+    public Long getCollectSum() {
+        return collectSum;
+    }
+
+    public void setCollectSum(Long collectSum) {
+        this.collectSum = collectSum;
+    }
+
+    public Long getMinLoveSum() {
+        return minLoveSum;
+    }
+
+    public void setMinLoveSum(Long minLoveSum) {
+        this.minLoveSum = minLoveSum;
+    }
+
+    public Long getMaxLoveSum() {
+        return maxLoveSum;
+    }
+
+    public void setMaxLoveSum(Long maxLoveSum) {
+        this.maxLoveSum = maxLoveSum;
+    }
+
+    public Long getMinCollectSum() {
+        return minCollectSum;
+    }
+
+    public void setMinCollectSum(Long minCollectSum) {
+        this.minCollectSum = minCollectSum;
+    }
+
+    public Long getMaxCollectSum() {
+        return maxCollectSum;
+    }
+
+    public void setMaxCollectSum(Long maxCollectSum) {
+        this.maxCollectSum = maxCollectSum;
+    }
+
+    @Range(min = 1, max = 2, message = "状态数字应为1或2",groups = {search.class})
+    private Integer status;
+
+    @NotNull(message = "老师id不能为空",groups = {insert.class,update.class})
+    @Min(value = 1,message = "老师id最小为1",groups = {insert.class,update.class})
+    private Long teacherId;
+    private String teacherName;
+
+    public String getTeacherName() {
+        return teacherName;
+    }
+
+    public void setTeacherName(String teacherName) {
+        this.teacherName = teacherName;
+    }
+
+    private Long createAt;
+
+    private Long createId;
+
+    private Long updateAt;
+
+    private Long updateId;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title == null ? null : title.trim();
+    }
+
+    public Integer getSort() {
+        return sort;
+    }
+
+    public void setSort(Integer sort) {
+        this.sort = sort;
+    }
+
+    public String getBannerUrl() {
+        return bannerUrl;
+    }
+
+    public void setBannerUrl(String bannerUrl) {
+        this.bannerUrl = bannerUrl == null ? null : bannerUrl.trim();
+    }
+
+    public Integer getGrade() {
+        return grade;
+    }
+
+    public void setGrade(Integer grade) {
+        this.grade = grade;
+    }
+
+    public Integer getSubject() {
+        return subject;
+    }
+
+    public void setSubject(Integer subject) {
+        this.subject = subject;
+    }
+
+    public String getIntroduction() {
+        return introduction;
+    }
+
+    public void setIntroduction(String introduction) {
+        this.introduction = introduction == null ? null : introduction.trim();
+    }
+
+    public String getVideoUrl() {
+        return videoUrl;
+    }
+
+    public void setVideoUrl(String videoUrl) {
+        this.videoUrl = videoUrl == null ? null : videoUrl.trim();
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content == null ? null : content.trim();
+    }
+
+    public Integer getStatus() {
+        return status;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
+    }
+
+    public Long getTeacherId() {
+        return teacherId;
+    }
+
+    public void setTeacherId(Long teacherId) {
+        this.teacherId = teacherId;
+    }
+
+    public Long getCreateAt() {
+        return createAt;
+    }
+
+    public void setCreateAt(Long createAt) {
+        this.createAt = createAt;
+    }
+
+    public Long getCreateId() {
+        return createId;
+    }
+
+    public void setCreateId(Long createId) {
+        this.createId = createId;
+    }
+
+    public Long getUpdateAt() {
+        return updateAt;
+    }
+
+    public void setUpdateAt(Long updateAt) {
+        this.updateAt = updateAt;
+    }
+
+    public Long getUpdateId() {
+        return updateId;
+    }
+
+    public void setUpdateId(Long updateId) {
+        this.updateId = updateId;
+    }
+}

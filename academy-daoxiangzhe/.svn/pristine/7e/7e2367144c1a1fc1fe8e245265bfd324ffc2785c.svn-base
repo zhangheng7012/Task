@@ -1,0 +1,18 @@
+package com.dxz.admin.service;
+
+import com.dxz.admin.pojo.Manager;
+import com.dxz.admin.pojo.Role;
+import java.util.List;
+import java.util.Set;
+
+public interface RoleService {
+    // 根据账号名称，查询角色名称
+    Set<String> findRoleNameByManagerName(String name);
+    // 根据账号名称，查询角色
+    List<Role> listRolesByName(String name);
+    // 根据账号，查询角色
+    List<Role> listRolesById(Long managerId);
+    // 角色列表
+    List<Role> rolesByNull();
+
+}

@@ -1,0 +1,396 @@
+package com.dxz.admin;
+
+import com.dxz.admin.dao.CourseMapper;
+import com.dxz.admin.dao.ManagerMapper;
+import com.dxz.admin.dao.UserMapper;
+import com.dxz.admin.pojo.*;
+import com.dxz.admin.result.CodeInfo;
+import com.dxz.admin.result.Result;
+import com.dxz.admin.service.*;
+import com.dxz.admin.utils.AliyunOSSUtil;
+import com.dxz.admin.utils.JedisUtil;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.shiro.crypto.hash.SimpleHash;
+import org.apache.shiro.util.ByteSource;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
+
+import javax.annotation.Resource;
+import java.util.*;
+
+@EnableTransactionManagement //开启声明式事务
+@RunWith(SpringRunner.class)
+@SpringBootTest
+public class AdminApplicationTests {
+
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
+    @Autowired
+    private UserService userService;
+    @Resource
+    private UserMapper userMapper;
+    @Autowired
+    private ManagerService managerService;
+    @Resource
+    private ManagerMapper managerMapper;
+    @Autowired
+    private PermissionService permissionService;
+    @Autowired
+    private RoleService roleService;
+    @Autowired
+    private CourseService courseService;
+    @Resource
+    private CourseMapper courseMapper;
+
+    private JedisUtil jedisUtil = new JedisUtil();
+
+    @Test
+    public void xz() {
+
+        List<String> pers= permissionService.listPermissionURLs("admin");
+        jedisUtil.addList("admin",pers);
+        System.out.println("嗯嗯："+jedisUtil.getList("admin"));
+
+//        jedisUtil.addSet("admin",pers);
+//        System.out.println("嗯嗯："+jedisUtil.getSet("admin"));
+//        System.out.println("嗯嗯："+pers);
+
+        List<String> pers2= permissionService.listPermissionURLs("userManager");
+        jedisUtil.addList("admin",pers2);
+        System.out.println("嗯嗯2："+jedisUtil.getList("admin"));
+
+//        jedisUtil.addSet("admin",pers2);
+//        System.out.println("嗯嗯2："+jedisUtil.getSet("admin"));
+//        System.out.println("嗯嗯2："+pers2);
+
+    }
+
+    @Test
+    public void x() {
+        UserExample example = new UserExample();
+        example.createCriteria().andSortEqualTo(1);
+        // 根据分类查询数据量
+        Long courses = userMapper.countByExample(example);
+        System.out.println(courses);
+    }
+
+    @Test
+    public void xd() {
+        UserExample example = new UserExample();
+        example.createCriteria().andScoreBetween(99L,177L);
+        // 根据积分范围查询，左右全闭，99 =< x =< 177，顺序不可反。
+        List<User> users = userMapper.selectByExample(example);
+        for (User user : users) {
+            System.out.println(user);
+        }
+    }
+
+    @Test
+    public void aaaa2a() {
+        String name = "是";
+        User user = new User();
+        user.setName(name);
+        // 用户分类为2，代表老师
+        user.setSort(2);
+        log.info("ggggg：{}",name);
+        // 查看名称是否重复
+        if(userService.findTeacherByName(user) != null) {
+            log.error("老师名称重复：{}",name);
+        }
+    }
+
+    @Test
+    public void aaa2a() {
+//        if(!StringUtils.isBlank("")) {
+            UserExample example = new UserExample();
+            example.createCriteria().andNameEqualTo("学生3");
+            example.createCriteria().andSortEqualTo(2);
+            // 根据名称查询，这里不是模糊查询
+            List<User> courses = userMapper.selectByExample(example);
+            System.out.println(courses);
+//        }
+//        System.out.println(!StringUtils.isBlank(""));// false
+//        System.out.println(StringUtils.isBlank(""));// true
+//        System.out.println(!StringUtils.isBlank(null));// false
+//        System.out.println(!StringUtils.isBlank("  "));// false
+
+    }
+
+    @Test
+    public void aaaa() {
+
+        List list1 = new ArrayList();
+        list1.add("4");
+        list1.add("5");
+        list1.add("6");
+        List list = new ArrayList();
+        list.add("1");
+        list.add("2");
+        list.add("3");
+        List list2 = new ArrayList();
+        list2.add("7");
+        list2.add("8");
+        list2.add("9");
+
+        List aa = new ArrayList();// 123456789
+        aa.addAll(list);
+        aa.addAll(list1);
+        aa.addAll(list2);
+
+        List a = new ArrayList();// 789123456
+        a.addAll(list2);
+        a.addAll(list);
+        a.addAll(list1);
+
+        System.out.println("enen："+aa+"::enen："+a);
+
+    }
+
+    @Test
+    public void addd() {
+        for (int i = 1; i < 6; i++) {
+            User user = new User();
+            user.setName("学生" + i);
+            user.setAvatarUrl("https://jnshu-7012.oss-cn-beijing.aliyuncs.com/minImage/c72a572a8c1949879e2d219da326e915.jpg?x-oss-process=image/auto-orient,1/resize,p_30/quality,q_90");
+            user.setSort(1);
+            user.setOpenid("0521");
+            user.setPhone(13068791270L);
+            user.setEmail("zhangheng@jnshu.com");
+            user.setGrade(i);
+            user.setScore(132L);
+            user.setStatus(1);
+            user.setSignSum(122L);
+            user.setSignCon(100L);
+            user.setSignNowCon(12L);
+            user.setCreateAt(System.currentTimeMillis());
+            user.setCreateId(12L);
+            user.setUpdateAt(System.currentTimeMillis());
+            user.setUpdateId(12L);
+
+            userMapper.insertSelective(user);
+        }
+    }
+
+    @Test
+    public void find() {
+
+        User user = new User();
+        user.setName("学");
+        user.setSort(1);
+//        user.setMinScore(100L);
+//        user.setMaxScore(150L);
+
+        Integer pageNum = 1;
+        Integer pageSize = 5;
+
+        PageHelper.startPage(pageNum,pageSize);
+        List<User> users = null;
+        try {
+            users = userService.findUserListSearch(user);
+        }catch (Exception e){
+            log.error("用户列表获取失败：{}",e.getMessage());
+        }
+        PageInfo<User> pageInfo = new PageInfo<User>(users);
+        System.out.println("用户列表分页："+pageInfo);
+    }
+
+    @Test
+    public void status() {
+        User user = new User();
+        user.setId(4L);
+        user.setStatus(0);
+        userService.updateUserStatus(user);
+    }
+    @Test
+    public void count() {
+        UserExample example = new UserExample();
+        System.out.println(userMapper.countByExample(example));
+    }
+
+    @Autowired
+    AliyunOSSUtil aliyunOSSUtil;
+    @Test
+    public void deletePhoto() {
+        String fileUrl = "https://jnshu-7012.oss-cn-beijing.aliyuncs.com/minImage/08fe66466faa4bb480026976edec82ee.jpg";
+        String fileName = StringUtils.substringAfterLast(fileUrl, "aliyuncs.com/");
+        boolean aa = aliyunOSSUtil.deletePhoto(fileName);
+        if (!aa) {
+            log.error("文件是否存在: {}", false);
+        }
+        log.error("文件是否删除: {}", true);
+    }
+
+    @Test
+    public void qq() {
+        String fileUrl = "https://jnshu-7012.oss-cn-beijing.aliyuncs.com/minImage/08fe66466faa4bb480026976edec82ee.jpg?mmmm";
+        String fileName = StringUtils.substringAfterLast(fileUrl, "aliyuncs.com/");
+        String aa = StringUtils.substringBeforeLast(fileName, "?");
+        String sss = StringUtils.substringBeforeLast(aa, "?");
+        log.error("文件是否删除: {}", fileName);
+        log.error("文件是否删除: {}", aa);
+        log.error("文件是否删除: {}", sss);
+    }
+
+    @Test
+    public void aq22() {
+        String str = "/a/u/role/11";
+        String str2 = "/a/u/role";
+
+        //截取字符串
+        String a1 = StringUtils.substringBeforeLast(str, "/");
+
+        System.out.println(a1.length());
+        if(a1.length() > 4){
+            System.out.println(a1);
+        }else {
+            System.out.println(str);
+        }
+
+        String a2 = StringUtils.substringBeforeLast(str2, "/");
+
+        System.out.println(a2.length());
+        if(a2.length() > 4){
+            System.out.println(a2);
+        }else {
+            System.out.println(str2);
+        }
+
+    }
+
+    @Test
+    public void aq() {
+        Manager manager33 = new Manager();
+        List<Long> roleIdList = new ArrayList<>();
+
+        manager33.setId(3L);
+        manager33.setName("角色333管理");
+        manager33.setUpdateId(7L);
+
+        roleIdList.add(77L);
+        roleIdList.add(88L);
+
+        // 查看名称是否重复
+        if (managerService.findManagerByName(manager33.getName()) != null) {
+            log.error("账号名称重复：{}", manager33.getName());
+        } else {
+            try {
+                Boolean a = managerService.updateManager(manager33, roleIdList);
+                if (a) {
+                    log.info("账号 {} 编辑成功", manager33.getId());
+                } else {
+                    log.error("账号 {} 编辑失败", manager33.getId());
+                }
+            } catch (Exception e) {
+                log.error("账号 {} 编辑失败：{}", manager33.getId(), e.getMessage());
+            }
+        }
+    }
+
+    @Test
+    public void aa() {
+//        Manager a = new Manager();
+////        a.setName("");
+////        a.setId(2L);
+//        System.out.println(managerService.findManagerListSearch(a));
+
+        Long id = 1L;
+        try{
+            Map<String,Object> map = new HashMap<>();
+            Manager manager = managerMapper.selectByPrimaryKey(id);
+            if(manager == null) {
+                log.info("账号 {} 不存在", id);
+            }else {
+                List<Role> roles = roleService.listRolesById(id);
+                manager.setRoles(roles);
+                log.info("账号 {} 查询成功", id);
+
+                List<Role> rolesList = roleService.listRolesByNull();
+                log.info("角色列表查询成功，长度：{}", rolesList.size());
+
+                map.put("manager", manager);
+                map.put("roles", rolesList);
+
+            }
+        }catch (Exception e){
+            log.error("账号 {} 信息获取失败：{}", id ,e.getMessage());
+        }
+    }
+
+
+
+    @Test
+    public void aa1() {
+        Long id = 9L;
+        Boolean a =false;
+        try {
+            a = managerService.deleteManager(id);
+            if(a) {
+                log.info("账号 {} 删除成功", id);
+            }else {
+                log.error("账号 {} 删除失败", id);
+            }
+        }catch (Exception e){
+            log.error("账号 {} 删除失败：{}", id ,e.getMessage());
+        }
+    }
+
+    @Test
+    public void add() {
+        Manager manager = new Manager();
+        List<Long> roleIdList = new ArrayList<>();
+
+        manager.setName("角色管理");
+        manager.setPassword("zhanghao");
+        manager.setCreateId(2L);
+
+        roleIdList.add(1L);
+        roleIdList.add(2L);
+
+        // 查看名称是否重复
+        if (managerService.findManagerByName(manager.getName()) != null){
+            log.error("账号名称重复：{}",manager.getName());
+        }else {
+            // 插入账号数据
+            Long addManagerId = null;
+            try {
+                addManagerId = managerService.addManager(manager);
+            } catch (Exception e) {
+                log.error("账号插入失败：{}", e.getMessage());
+            }
+            // 插入账号-角色关系数据
+            List<Long> roles = null;
+            try {
+                roles = managerService.addManagerRole(addManagerId, manager.getCreateId(), roleIdList);
+            } catch (Exception e) {
+                log.error("插入账号-角色关系数据失败：{}", e.getMessage());
+                // 删除已保存的账号数据？？？   需要事件的绑定~~
+            }
+        }
+    }
+
+    /**
+     * 生成测试用的md5加密的密码
+     * */
+    @Test
+    public void test() {
+        String hashAlgorithmName = "md5";
+        // 密码均为 3 个首字母，除admin
+        String credentials = "uuu";//密码
+//        String credentials = "admin";//密码
+
+        int hashIterations = 7;
+        ByteSource credentialsSalt = ByteSource.Util.bytes("userManager");//账号名称为盐
+//        ByteSource credentialsSalt = ByteSource.Util.bytes("admin");//账号名称为盐
+        String  obj = new SimpleHash(hashAlgorithmName, credentials, credentialsSalt, hashIterations).toHex();
+        System.out.println(obj);
+    }
+
+}

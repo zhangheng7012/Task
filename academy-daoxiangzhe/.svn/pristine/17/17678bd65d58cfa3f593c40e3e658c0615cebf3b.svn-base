@@ -1,0 +1,23 @@
+package com.dxz.admin.service;
+
+import com.dxz.admin.pojo.Permission;
+
+import java.util.List;
+import java.util.Set;
+
+public interface PermissionService {
+
+    // 根据账号名称，查询拥有权限，非模糊查询
+    List<Permission> findPermissionByManagerName(String name);
+    // 根据账号名称，查询权限名称
+    Set<String> listPermissionNames(String name);
+    // 根据账号名称，查询权限url
+    List<String> listPermissionURLs(String name);
+    // 权限列表
+    List<Permission> listPersByNull();
+    // 根据角色id，查询拥有权限
+    List<Permission> listPersById(Long roleId);
+    // 判断请求 uri 是否需要拦截，用于url拦截器
+    boolean needInterceptor(String requestURI);
+
+}

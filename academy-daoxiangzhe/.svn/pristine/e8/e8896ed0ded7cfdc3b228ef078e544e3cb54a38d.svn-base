@@ -1,0 +1,49 @@
+package com.dxz.home.service.impl;
+
+import com.dxz.home.dao.UserMapper;
+import com.dxz.home.pojo.User;
+import com.dxz.home.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.List;
+
+@Service
+public class UserServiceImpl implements UserService {
+
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
+    @Resource
+    UserMapper userMapper;
+
+    @Override
+    public List<User> findUserListSearch(User user) {
+        List<User> users = userMapper.findUserListSearch(user);
+        log.info("查询的用户列表长度：{}",users.size());
+        return users;
+    }
+
+    @Override
+    public Boolean updateUserStatus(User user) {
+        user.setUpdateAt(System.currentTimeMillis());
+        int row = userMapper.updateByPrimaryKeySelective(user);
+        if(row > 0){
+            return true;
+        }else {
+            return false;
+        }
+    }
+
+    @Override
+    public Boolean updateUser(User user) {
+        user.setUpdateAt(System.currentTimeMillis());
+        int row = userMapper.updateByPrimaryKeySelective(user);
+        if(row > 0){
+            return true;
+        }else {
+            return false;
+        }
+    }
+}

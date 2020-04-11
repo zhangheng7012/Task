@@ -1,0 +1,265 @@
+package com.dxz.home.utils;
+
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
+
+import java.util.*;
+
+public class JedisUtil {
+
+    // redis 连接池
+    private static JedisPool pool = null;
+
+//    private String password = "zhang62853";
+
+    private JedisPool getPool() {
+
+        if (pool == null) {
+
+            JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
+
+            //连接超时时是否阻塞，false时报异常,ture阻塞直到超时, 默认true
+            jedisPoolConfig.setBlockWhenExhausted(true);
+
+            //逐出策略（默认DefaultEvictionPolicy(当连接超过最大空闲时间,或连接数超过最大空闲连接数)）
+            jedisPoolConfig.setEvictionPolicyClassName("org.apache.commons.pool2.impl.DefaultEvictionPolicy");
+
+            //最大空闲连接数, 默认8个
+            jedisPoolConfig.setMaxIdle(100);
+
+            //最大连接数, 默认8个
+            jedisPoolConfig.setMaxTotal(300);
+
+            //获取连接时的最大等待毫秒数(如果设置为阻塞时BlockWhenExhausted)
+            // 如果超时就抛异常, 小于零:阻塞不确定的时间, 默认-1
+            //jedisPoolConfig.setMaxWaitMillis(-1);
+
+            //逐出连接的最小空闲时间 默认1800000毫秒(30分钟)
+            jedisPoolConfig.setMinEvictableIdleTimeMillis(500);
+
+            //最小空闲连接数, 默认0
+            jedisPoolConfig.setMinIdle(0);
+
+            //每次逐出检查时 逐出的最大数目 如果为负数就是 : 1/abs(n), 默认3
+            jedisPoolConfig.setNumTestsPerEvictionRun(100);
+
+            //对象空闲多久后逐出, 当空闲时间>该值 且 空闲连接>最大空闲数 时直接逐出
+            // 不再根据MinEvictableIdleTimeMillis判断  (默认逐出策略)
+            jedisPoolConfig.setSoftMinEvictableIdleTimeMillis(1000);
+
+            // 获取连接时的最大等待毫秒数(如果设置为阻塞时BlockWhenExhausted)
+            // 如果超时就抛异常, 小于零:阻塞不确定的时间, 默认-1
+            jedisPoolConfig.setMaxWaitMillis(500);
+
+            //对拿到的connection进行validateObject有效性校验, 默认false
+            jedisPoolConfig.setTestOnBorrow(false);
+
+            //在进行returnObject对返回的connection进行validateObject校验
+            jedisPoolConfig.setTestOnReturn(true);
+
+            //定时对线程池中空闲的链接进行validateObject有效性校验, 默认false
+            jedisPoolConfig.setTestWhileIdle(true);
+
+
+            pool = new JedisPool(jedisPoolConfig, "127.0.0.1", 6379);
+//            pool = new JedisPool(jedisPoolConfig, "47.94.93.251", 6379);
+            return pool;
+        } else {
+            return pool;
+        }
+    }
+
+    public void set(String key, String value) {
+        if (pool == null) {
+            pool = getPool();
+        }
+        Jedis jedis = pool.getResource();
+//        jedis.auth(password);
+        jedis.del(key);
+        jedis.set(key, value);
+        jedis.close();
+    }
+
+    public String get(String key) {
+        if (pool == null) {
+            pool = getPool();
+        }
+        Jedis jedis = pool.getResource();
+//        jedis.auth(password);
+        String result = jedis.get(key);
+        jedis.close();
+        return result;
+    }
+
+    //新增(存储Map)
+    public String addMap(String key, Map<String, String> map) {
+        if (pool == null) {
+            pool = getPool();
+        }
+        Jedis jedis = pool.getResource();
+        String result = jedis.hmset(key,map);
+        jedis.close();
+        return result;
+    }
+
+    //获取map
+    public Map<String,String> getMap(String key){
+        if (pool == null) {
+            pool = getPool();
+        }
+        Jedis jedis = pool.getResource();
+        Map<String, String> map = new HashMap<String, String>();
+        Iterator<String> iter=jedis.hkeys(key).iterator();
+        while (iter.hasNext()){
+            String ikey = iter.next();
+            map.put(ikey, jedis.hmget(key,ikey).get(0));
+        }
+        jedis.close();
+        return map;
+    }
+
+    //新增(存储List)
+    public void addList(String key, List<String> list){
+        if (pool == null) {
+            pool = getPool();
+        }
+        Jedis jedis = pool.getResource();
+        jedis.del(key); //开始前，先移除所有的内容  
+        for(String value:list){
+            jedis.rpush(key,value);
+        }
+        jedis.close();
+    }
+    //获取List
+    public List<String> getList(String key){
+        if (pool == null) {
+            pool = getPool();
+        }
+        Jedis jedis = pool.getResource();
+        List<String> list = jedis.lrange(key,0,-1);
+        jedis.close();
+        return list;
+    }
+
+    //新增(存储set)
+    public void addSet(String key, Set<String> set){
+        if (pool == null) {
+            pool = getPool();
+        }
+        Jedis jedis = pool.getResource();
+//        jedis.auth(password);
+        jedis.del(key);
+        for(String value:set){
+            jedis.sadd(key,value);
+        }
+        jedis.close();
+    }
+
+    //获取Set
+    public Set<String> getSet(String key){
+        if (pool == null) {
+            pool = getPool();
+        }
+        Jedis jedis = pool.getResource();
+//        jedis.auth(password);
+        Set<String> set = jedis.smembers(key);
+        jedis.close();
+        return set;
+    }
+
+    // 删除缓存，成功返回1，失败0
+    public Long del(String key) {
+        if (pool == null) {
+            pool = getPool();
+        }
+        Jedis jedis = pool.getResource();
+//        jedis.auth(password);
+        Long result = jedis.del(key);
+        jedis.close();
+        return result;
+    }
+
+    public boolean exists(String key) {
+        if (pool == null) {
+            pool = getPool();
+        }
+        Jedis jedis = pool.getResource();
+//        jedis.auth(password);
+        Boolean isExists = jedis.exists(key);
+        jedis.close();
+        return isExists;
+    }
+
+    // 设置缓存值，以及过期时间，单位为秒
+    // 若key值存在，则会进行覆盖
+    public String setex(String key,int seconds,String value) {
+        if (pool == null) {
+            pool = getPool();
+        }
+        Jedis jedis = pool.getResource();
+//        jedis.auth(password);
+        // 成功，返回“ OK ”
+        String result = jedis.setex(key,seconds,value);
+        jedis.close();
+        return result;
+    }
+
+    // 设置过期时间，单位为秒
+    public Long expire(String key,int seconds) {
+        if (pool == null) {
+            pool = getPool();
+        }
+        Jedis jedis = pool.getResource();
+//        jedis.auth(password);
+        // 设置成功返回 1 。
+        // 当 key 不存在、不能为 key 设置过期时间时返回 0 。
+        Long result = jedis.expire(key,seconds);
+        jedis.close();
+        return result;
+    }
+
+    // Redis Incr 命令将 key 中储存的数字值增一。
+    // 如果 key 不存在，那么 key 的值会先被初始化为 0 ，然后再执行 INCR 操作。
+    // 如果值包含错误的类型，或字符串类型的值不能表示为数字，那么返回一个错误。
+    // 本操作的值限制在 64 位(bit)有符号数字表示之内。
+    public Long incr(String key) {
+        if (pool == null) {
+            pool = getPool();
+        }
+        Jedis jedis = pool.getResource();
+//        jedis.auth(password);
+        // 返回value，即次数
+        Long result = jedis.incr(key);
+        jedis.close();
+        return result;
+    }
+
+    // 获取所有名称的keys
+    public Set<String> keys(String key) {
+        if (pool == null) {
+            pool = getPool();
+        }
+        Jedis jedis = pool.getResource();
+//        jedis.auth(password);
+        Set<String> keys = jedis.keys(key);
+        jedis.close();
+        return keys;
+    }
+
+    // 查看过期时间还剩多少，单位为秒
+    public Long ttl(String key) {
+        if (pool == null) {
+            pool = getPool();
+        }
+        Jedis jedis = pool.getResource();
+//        jedis.auth(password);
+        // 当 key 不存在时，返回 -2 。
+        // 当 key 存在但没有设置剩余生存时间时，返回 -1 。
+        // 否则，以秒为单位，返回 key 的剩余生存时间。
+        Long time = jedis.ttl(key);
+        jedis.close();
+        return time;
+    }
+
+}

@@ -1,0 +1,172 @@
+package com.dxz.admin.controller;
+
+import com.dxz.admin.dao.ManagerMapper;
+import com.dxz.admin.pojo.Manager;
+import com.dxz.admin.pojo.Role;
+import com.dxz.admin.result.CodeInfo;
+import com.dxz.admin.result.Result;
+import com.dxz.admin.service.ManagerService;
+import com.dxz.admin.service.PermissionService;
+import com.dxz.admin.service.RoleService;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
+import org.apache.ibatis.annotations.Delete;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import javax.annotation.Resource;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/")
+public class ManagerController {
+
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
+    @Autowired
+    private ManagerService managerService;
+    @Resource
+    private ManagerMapper managerMapper;
+    @Autowired
+    private PermissionService permissionService;
+    @Autowired
+    private RoleService roleService;
+
+    // String name
+    @GetMapping("/a/u/manager/list/search")
+    public Result findManagerListSearch(Manager manager,
+                                        @RequestParam(required = false,
+                                        defaultValue = "1",value = "pageNumber") Integer pageNumber,
+                                        @RequestParam(required = false,
+                                        defaultValue = "10",value = "pageSize") Integer pageSize) {
+        PageHelper.startPage(pageNumber,pageSize);
+        List<Manager> managers = null;
+        try {
+            managers = managerService.findManagerListSearch(manager);
+            if(managers.size() == 0){
+                log.error("无符合条件的账号");
+                return new Result(CodeInfo.MANAGER_FIND_NULL.getCode(),CodeInfo.MANAGER_FIND_NULL.getMsg());
+            }
+        }catch (Exception e){
+            log.error("账户列表获取失败：{}",e.getMessage());
+            return new Result(CodeInfo.MANAGER_LIST_GET_FAIL.getCode(),CodeInfo.MANAGER_LIST_GET_FAIL.getMsg());
+        }
+        PageInfo<Manager> pageInfo = new PageInfo<Manager>(managers);
+        return new Result(CodeInfo.SUCCESS.getCode(),CodeInfo.SUCCESS.getMsg(),pageInfo);
+    }
+
+    @GetMapping("/a/u/manager")
+    public Result toAddManager() {
+        List<Role> roles = null;
+        try {
+            roles = roleService.listRolesByNull();
+        }catch (Exception e){
+            log.error("角色列表获取失败：{}",e.getMessage());
+            return new Result(CodeInfo.ROLE_LIST_GET_FAIL.getCode(),CodeInfo.ROLE_LIST_GET_FAIL.getMsg());
+        }
+        return new Result(CodeInfo.SUCCESS.getCode(),CodeInfo.SUCCESS.getMsg(),roles);
+    }
+
+    // String name,String password, Long createId, List<Long> roleIdList
+    @PostMapping("/a/u/manager")
+    public Result addManager(Manager manager, @RequestParam(value = "roleIdList")List<Long> roleIdList){
+        // 查看名称是否重复
+        if(managerService.findManagerByName(manager.getName()) != null) {
+            log.error("账号名称重复：{}", manager.getName());
+            return new Result(CodeInfo.MANAGER_NAME_GET.getCode(), CodeInfo.MANAGER_NAME_GET.getMsg());
+        }else {
+            // 插入账号数据
+            Long addManagerId = null;
+            try {
+                addManagerId = managerService.addManager(manager);
+            } catch (Exception e) {
+                log.error("账号插入失败：{}", e.getMessage());
+                return new Result(CodeInfo.MANAGER_INSTER_FAIL.getCode(), CodeInfo.MANAGER_INSTER_FAIL.getMsg());
+            }
+            // 插入账号-角色关系数据
+            List<Long> roles = null;
+            try {
+                roles = managerService.addManagerRole(addManagerId, manager.getCreateId(), roleIdList);
+            } catch (Exception e) {
+                log.error("插入账号-角色关系数据失败：{}", e.getMessage());
+                return new Result(CodeInfo.MANAGER_INSTER_FAIL.getCode(), CodeInfo.MANAGER_INSTER_FAIL.getMsg());
+                // 若失败，删除已保存的账号数据？？？   需要事务的绑定~~
+            }
+            return new Result(CodeInfo.SUCCESS.getCode(), CodeInfo.SUCCESS.getMsg());
+        }
+    }
+
+    @DeleteMapping("/a/u/manager/{id}")
+    public Result deleteManager(Long id){
+        Boolean a = false;
+        try {
+            a = managerService.deleteManager(id);
+            if(a) {
+                log.info("账号 {} 删除成功", id);
+                return new Result(CodeInfo.SUCCESS.getCode(), CodeInfo.SUCCESS.getMsg());
+            }else {
+                log.error("账号 {} 删除失败", id);
+                return new Result(CodeInfo.MANAGER_DELETE_FAIL.getCode(), CodeInfo.MANAGER_DELETE_FAIL.getMsg());
+            }
+        }catch (Exception e){
+            log.error("账号 {} 删除失败：{}", id ,e.getMessage());
+            return new Result(CodeInfo.MANAGER_DELETE_FAIL.getCode(), CodeInfo.MANAGER_DELETE_FAIL.getMsg());
+        }
+    }
+
+    @GetMapping("/a/u/manager/{id}")
+    public Result editManager(Long id){
+
+        try{
+            Map<String,Object> map = new HashMap<>();
+            Manager manager = managerMapper.selectByPrimaryKey(id);
+            if(manager == null) {
+                log.info("账号 {} 不存在", id);
+                return new Result(CodeInfo.MANAGER_NULL_FAIL.getCode(), CodeInfo.MANAGER_NULL_FAIL.getMsg());
+            }else {
+                List<Role> roles = roleService.listRolesById(id);
+                manager.setRoles(roles);
+                log.info("账号 {} 查询成功", id);
+
+                List<Role> rolesList = roleService.listRolesByNull();
+                log.info("角色列表查询成功，长度：{}", rolesList.size());
+
+                map.put("manager", manager);
+                map.put("roles", rolesList);
+
+                return new Result(CodeInfo.SUCCESS.getCode(), CodeInfo.SUCCESS.getMsg(), map);
+            }
+        }catch (Exception e){
+            log.error("账号 {} 信息获取失败：{}", id ,e.getMessage());
+            return new Result(CodeInfo.MANAGER_MSG_GET_FAIL.getCode(), CodeInfo.MANAGER_MSG_GET_FAIL.getMsg());
+        }
+    }
+
+    // Long id,String name,Long updateId,List<Long> roleIdList
+    @PutMapping("/a/u/manager/{id}")
+    public Result updateManager(Manager manager, @RequestParam(value = "roleIdList")List<Long> roleIdList){
+        // 查看名称是否重复
+        if(managerService.findManagerByName(manager.getName()) != null) {
+            log.error("账号名称重复：{}", manager.getName());
+            return new Result(CodeInfo.MANAGER_NAME_GET.getCode(), CodeInfo.MANAGER_NAME_GET.getMsg());
+        }else {
+            try {
+                Boolean a = managerService.updateManager(manager, roleIdList);
+                if (a) {
+                    log.info("账号 {} 编辑成功", manager.getId());
+                    return new Result(CodeInfo.SUCCESS.getCode(), CodeInfo.SUCCESS.getMsg());
+                } else {
+                    log.error("账号 {} 编辑失败", manager.getId());
+                    return new Result(CodeInfo.MANAGER_UPDATE_FAIL.getCode(), CodeInfo.MANAGER_UPDATE_FAIL.getMsg());
+                }
+            }catch (Exception e){
+                log.error("账号 {} 编辑失败：{}", manager.getId() ,e.getMessage());
+                return new Result(CodeInfo.MANAGER_UPDATE_FAIL.getCode(), CodeInfo.MANAGER_UPDATE_FAIL.getMsg());
+            }
+        }
+    }
+}

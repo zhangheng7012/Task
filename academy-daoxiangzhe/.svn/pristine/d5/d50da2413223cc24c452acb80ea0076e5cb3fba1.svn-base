@@ -1,0 +1,261 @@
+package com.dxz.home.controller;
+
+import com.alibaba.fastjson.JSON;
+import com.dxz.home.dao.UserMapper;
+import com.dxz.home.pojo.Connection;
+import com.dxz.home.pojo.Course;
+import com.dxz.home.result.CodeInfo;
+import com.dxz.home.result.Result;
+import com.dxz.home.service.CourseService;
+import com.dxz.home.utils.JedisUtil;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
+import org.hibernate.validator.constraints.Range;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import javax.annotation.Resource;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/")
+@Validated
+public class CourseController {
+
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
+    @Resource
+    private UserMapper userMapper;
+    @Autowired
+    private CourseService courseService;
+    private JedisUtil jedisUtil = new JedisUtil();
+
+    @GetMapping("/b/jedis")
+    public Result videoList(){
+        Long i = jedisUtil.del("courseList");
+        if(i == 1){
+            log.info("视频列表缓存删除成功");
+            return new Result(CodeInfo.SUCCESS.getCode(), CodeInfo.SUCCESS.getMsg());
+        }
+        log.error("视频列表缓存删除失败");
+        return new Result(1314, "视频列表缓存删除失败");
+    }
+
+    // Long id,Integer grade,Integer subject
+    @GetMapping("/b/video/list/search")
+    public Result videoList(@NotNull(message = "用户id不能为空") Long id,
+                            @NotNull(message = "年级数字不能为空")
+                            @Range(min = 0, max = 6, message = "年级数字应为0-6") Integer grade,
+                            @NotNull(message = "科目数字不能为空")
+                            @Range(min = 0, max = 6, message = "科目数字应为0-6") Integer subject,
+                            @RequestParam(required = false,
+                                    defaultValue = "1",value = "pageNumber") Integer pageNumber,
+                            @RequestParam(required = false,
+                                    defaultValue = "10",value = "pageSize") Integer pageSize) {
+
+        // 添加缓存，存入时需转为json字符串
+        List<Course> courses = null;
+        if(jedisUtil.exists("courseList")){
+            courses = JSON.parseArray(jedisUtil.get("courseList"), Course.class);
+            log.info("缓存中获取课程列表");
+        }else {
+            courses = courseService.findCourseList();
+            String json = JSON.toJSONString(courses);
+            jedisUtil.set("courseList",json);
+        }
+
+        List<Course> videos = new ArrayList<>();
+        List<Course> banners = new ArrayList<>();
+        if(courses.size() != 0) {
+            for (Course course : courses) {
+                Integer status = course.getStatus();
+                // 视频状态，1为上架
+                if (status == 1) {
+                    // 视频分类，1为banner视频
+                    if(course.getSort() == 1){
+                        banners.add(course);
+                    }else {
+                        // 0 是全部
+                        if(grade == 0 && subject == 0){
+                            videos.add(course);
+                        }else if(grade == 0 && course.getSubject() == subject){
+                            videos.add(course);
+                        }else if(course.getGrade() == grade && subject == 0){
+                            videos.add(course);
+                        }else if(course.getGrade() == grade && course.getSubject() == subject){
+                            videos.add(course);
+                        }
+                    }
+                }
+            }
+        }
+        log.info("查询的用户视频列表长度：{}",videos.size());
+        if(videos.size() == 0) {
+            log.error("无符合条件的视频");
+            return new Result(CodeInfo.COURSE_FIND_NULL.getCode(), CodeInfo.COURSE_FIND_NULL.getMsg());
+        }
+        // banner视频
+        if(banners.size() == 0) {
+            log.error("无banner视频");
+        }
+        List<Connection> connections = null;
+        if(jedisUtil.exists("conList")){
+            connections = JSON.parseArray(jedisUtil.get("conList"), Connection.class);
+            log.info("缓存中获取课程关系列表");
+        }else {
+            connections = courseService.findCourseConnection(id);
+            String json = JSON.toJSONString(connections);
+            jedisUtil.set("conList",json);
+        }
+        // 用户收藏的视频id列表
+        List<Connection> collectUser = courseService.findCourseCollect(connections);
+        // 用户点赞的视频id列表
+        List<Connection> loveUser = courseService.findCourseLove(connections);
+		
+		PageHelper.startPage(pageNumber,pageSize);
+        // 视频集合，含老师信息
+        PageInfo<Course> pageInfo = new PageInfo<Course>(videos);
+        Map<String,Object> map = new HashMap<>();
+        map.put("banners",banners);
+        map.put("collectUser",collectUser);
+        map.put("loveUser",loveUser);
+        map.put("videos",pageInfo);
+        return new Result(CodeInfo.SUCCESS.getCode(),CodeInfo.SUCCESS.getMsg(),map);
+    }
+
+    @GetMapping(value = {"/b/video/{id}","/b/video/"})
+    public Result getVideo(@NotNull(message = "用户id不能为空") Long uid,
+                           @NotNull(message = "视频id不能为空") @PathVariable(value = "id",required = false) Long id){
+        Map<String,Object> map = new HashMap<>();
+        // 根据id查询课程，含老师名称
+        Course video = null;
+        List<Course> courses = null;
+        if(jedisUtil.exists("courseList")){
+            courses = JSON.parseArray(jedisUtil.get("courseList"), Course.class);
+            log.info("缓存中获取视频");
+            for (Course course : courses) {
+                // 视频状态，1为上架
+                if (course.getId() == id) {
+                    video = course;
+                }
+            }
+        }else {
+            video = courseService.findCourseById(id);
+        }
+
+        if(video == null) {
+            log.error("视频 {} 信息获取失败", id );
+            return new Result(CodeInfo.COURSE_MSG_GET_FAIL.getCode(), CodeInfo.COURSE_MSG_GET_FAIL.getMsg());
+        }else {
+            List<Connection> connections = null;
+            if(jedisUtil.exists("conList")){
+                connections = JSON.parseArray(jedisUtil.get("conList"), Connection.class);
+                log.info("缓存中获取课程关系列表");
+            }else {
+                connections = courseService.findCourseConnection(id);
+                String json = JSON.toJSONString(connections);
+                jedisUtil.set("conList",json);
+            }
+            // 用户收藏的视频id列表
+            List<Connection> collectUser = courseService.findCourseCollect(connections);
+            // 用户点赞的视频id列表
+            List<Connection> loveUser = courseService.findCourseLove(connections);
+            map.put("video",video);
+            map.put("collectUser",collectUser);
+            map.put("loveUser",loveUser);
+            log.info("视频 {} 查询成功", id);
+            return new Result(CodeInfo.SUCCESS.getCode(), CodeInfo.SUCCESS.getMsg(), map);
+        }
+    }
+
+    // Long uid,Long vid,Integer status
+    @PostMapping("/b/video/connection")
+    public Result addConnection(@Valid Connection connection){
+        // 插入用户-视频关系数据，修改视频数量信息
+        Boolean result = courseService.addConnection(connection);
+        if(!result){
+            log.error("课程 {} 收藏/点赞失败",connection.getVid());
+            return new Result(CodeInfo.COURSE_CONNECT_INSTER_FAIL.getCode(), CodeInfo.COURSE_CONNECT_INSTER_FAIL.getMsg());
+        }
+        // 添加成功，则删除缓存中的列表
+        jedisUtil.del("conList");
+        return new Result(CodeInfo.SUCCESS.getCode(), CodeInfo.SUCCESS.getMsg());
+    }
+
+    // Long uid,Long vid,Integer status
+    @DeleteMapping("/b/video/connection")
+    public Result deleteConnection(@Valid Connection connection){
+        // 删除用户-视频关系数据，修改视频数量信息
+        Boolean result = courseService.deleteConnection(connection);
+        if(!result){
+            log.error("课程 {} 取消收藏/点赞失败",connection.getVid());
+            return new Result(CodeInfo.COURSE_CONNECT_DELETE_FAIL.getCode(), CodeInfo.COURSE_CONNECT_DELETE_FAIL.getMsg());
+        }
+        // 添加成功，则删除缓存中的列表
+        jedisUtil.del("conList");
+        return new Result(CodeInfo.SUCCESS.getCode(), CodeInfo.SUCCESS.getMsg());
+    }
+
+    @GetMapping("/b/video/collection")
+    public Result collectVideoList(@NotNull(message = "用户id不能为空") Long id,
+                                   @RequestParam(required = false,
+                                           defaultValue = "1",value = "pageNumber") Integer pageNumber,
+                                   @RequestParam(required = false,
+                                           defaultValue = "10",value = "pageSize") Integer pageSize) {
+        PageHelper.startPage(pageNumber,pageSize);
+
+        List<Connection> connections = null;
+        if(jedisUtil.exists("conList")){
+            connections = JSON.parseArray(jedisUtil.get("conList"), Connection.class);
+            log.info("缓存中获取课程关系列表");
+        }else {
+            connections = courseService.findCourseConnection(id);
+            String json = JSON.toJSONString(connections);
+            jedisUtil.set("conList",json);
+        }
+        // 用户点赞的视频id列表
+        List<Connection> loveUser = courseService.findCourseLove(connections);
+
+        // 添加缓存，存入时需转为json字符串
+        List<Course> courses = null;
+        if(jedisUtil.exists("courseList")){
+            courses = JSON.parseArray(jedisUtil.get("courseList"), Course.class);
+            log.info("缓存中获取课程列表");
+        }else {
+            courses = courseService.findCourseList();
+            String json = JSON.toJSONString(courses);
+            jedisUtil.set("courseList",json);
+        }
+        List<Course> videos = new ArrayList<>();
+        for (Connection connection : connections) {
+            // 关系状态，1为被收藏，2为被点赞
+            if(connection.getStatus() == 1){
+                for (Course course : courses) {
+                    if(course.getId() == connection.getVid()){
+                        videos.add(course);
+                    }
+                }
+            }
+        }
+        if(videos.size() == 0) {
+            log.error("用户 {} 无收藏的视频列表",id);
+            return new Result(CodeInfo.COURSE_FIND_NULL.getCode(), CodeInfo.COURSE_FIND_NULL.getMsg());
+        }
+        // 用户收藏的视频集合，含老师信息
+        PageInfo<Course> pageInfo = new PageInfo<Course>(videos);
+
+        Map<String,Object> map = new HashMap<>();
+        map.put("loveUser",loveUser);
+        map.put("videos",pageInfo);
+        return new Result(CodeInfo.SUCCESS.getCode(), CodeInfo.SUCCESS.getMsg(), map);
+    }
+
+}

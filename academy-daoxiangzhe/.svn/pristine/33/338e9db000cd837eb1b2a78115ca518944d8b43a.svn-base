@@ -1,0 +1,23 @@
+#server.port=20897
+#server.servlet.context-path=
+
+# 修改日志的级别，默认root是info
+#logging.level.root=info
+# 不指定路径在当前项目下生成springboot.log日志
+#logging.file.name=springboot.log
+# 可以指定完整的路径；
+#logging.file.name=D:/Java-jnshu/springboot/logs/springboot.log
+# 在当前磁盘的根路径下创建spring文件夹和里面的log文件夹；使用spring.log 作为默认文件
+#logging.file.path=/spring/log
+# 在控制台输出的日志的格式
+#logging.pattern.console=%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n
+# 指定文件中日志输出的格式
+#logging.pattern.file=%d{yyyy-MM-dd} === [%thread] === %-5level === %logger{50} ==== %msg%n
+
+# 日志输出格式：
+# %d 表示日期时间，
+# %thread 表示线程名，
+# %-5level：级别从左显示5个字符宽度
+# %logger{50} 表示logger名字最长50个字符，否则按照句点分割。
+# %msg：日志消息，
+# %n 是换行符

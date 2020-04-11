@@ -1,0 +1,184 @@
+package com.dxz.home.controller;
+
+import com.dxz.home.dao.UserMapper;
+import com.dxz.home.pojo.User;
+import com.dxz.home.pojo.UserExample;
+import com.dxz.home.result.CodeInfo;
+import com.dxz.home.result.Result;
+import com.dxz.home.service.UserService;
+import com.dxz.home.utils.JedisUtil;
+import com.dxz.home.utils.SMSUtil;
+import com.dxz.home.utils.SendMailUtil;
+import com.dxz.home.utils.TelMailTestUtil;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import javax.annotation.Resource;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/")
+public class UserController {
+
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
+    @Autowired
+    private UserService userService;
+    @Resource
+    private UserMapper userMapper;
+    @Autowired
+    private SMSUtil smsUtil;
+    @Autowired
+    private SendMailUtil sendMailUtil;
+
+    private JedisUtil jedisUtil = new JedisUtil();
+    private TelMailTestUtil telMailTestUtil = new TelMailTestUtil();
+
+    // Long id
+    @GetMapping("/b/user/{id}")
+    public Result getUser(Long id) {
+        User user = null;
+        try {
+            user = userMapper.selectByPrimaryKey(id);
+            if(user == null) {
+                log.info("用户 {} 不存在", id);
+                return new Result(CodeInfo.USER_FIND_NULL.getCode(),CodeInfo.USER_FIND_NULL.getMsg());
+            }
+        }catch (Exception e){
+            log.error("用户 {} 信息获取失败：{}", id ,e.getMessage());
+            return new Result(CodeInfo.USER_MSG_GET_FAIL.getCode(),CodeInfo.USER_MSG_GET_FAIL.getMsg());
+        }
+        return new Result(CodeInfo.SUCCESS.getCode(),CodeInfo.SUCCESS.getMsg(),user);
+    }
+
+    // Long id,String name, String avatarUrl, String grade
+    @PutMapping("/b/user/{id}")
+    public Result updateUser(User user) {
+        try {
+            Boolean a = userService.updateUser(user);
+            if (a) {
+                log.info("用户 {} 信息编辑成功", user.getId());
+                return new Result(CodeInfo.SUCCESS.getCode(), CodeInfo.SUCCESS.getMsg());
+            } else {
+                log.error("用户 {} 信息编辑失败", user.getId());
+                return new Result(CodeInfo.USER_UPDATE_FAIL.getCode(), CodeInfo.USER_UPDATE_FAIL.getMsg());
+            }
+        }catch (Exception e){
+            log.error("用户 {} 信息编辑失败：{}", user.getId() ,e.getMessage());
+            return new Result(CodeInfo.USER_UPDATE_FAIL.getCode(), CodeInfo.USER_UPDATE_FAIL.getMsg());
+        }
+    }
+
+    // 可能是 容联 放假，测试用的短信通道无法使用
+    // Long id ,Long phone
+    @PostMapping("/b/user/phone")
+    public Result getPhoneCode(User user){
+        // 进行验证码次数检查，过多则无法获取
+        if(telMailTestUtil.timesTest(String.valueOf(user.getPhone()))) {
+            try {
+                boolean flag = smsUtil.sendTelCode(String.valueOf(user.getPhone()));
+                if (flag) {
+                    log.info("用户 {} 获取手机验证码成功", user.getId() );
+                    return new Result(CodeInfo.SUCCESS.getCode(), CodeInfo.SUCCESS.getMsg());
+                } else {
+                    log.error("用户 {} 获取手机验证码失败", user.getId() );
+                    return new Result(CodeInfo.USER_PHONE_CODE_GET_FAIL.getCode(), CodeInfo.USER_PHONE_CODE_GET_FAIL.getMsg());
+                }
+            }catch (Exception e){
+                log.error("用户 {} 获取手机验证码失败：{}", user.getId() ,e.getMessage());
+                return new Result(CodeInfo.USER_PHONE_CODE_GET_FAIL.getCode(), CodeInfo.USER_PHONE_CODE_GET_FAIL.getMsg());
+            }
+        }else {
+            log.info("用户 {} 短时间邮箱验证次数过多", user.getId() );
+            return new Result(CodeInfo.USER_CODE_TIMES.getCode(), CodeInfo.USER_CODE_TIMES.getMsg());
+        }
+    }
+
+    // Long id ,Long phone
+    @PostMapping("/b/user/phone/verify")
+    public Result bindUserPhone(User user,Integer code){
+        if(code != null) {
+            // 取出缓存的验证码
+            String redisCode = jedisUtil.get(String.valueOf(user.getPhone()));
+            // 确定验证码
+            if(redisCode != null && !"".equals(redisCode)) {
+                if (String.valueOf(code).equals(redisCode)) {
+                    try {
+                        Boolean a = userService.updateUser(user);
+                        if (a) {
+                            log.info("用户 {} 手机绑定成功", user.getId());
+                            return new Result(CodeInfo.SUCCESS.getCode(), CodeInfo.SUCCESS.getMsg());
+                        }else {
+                            log.error("用户 {} 手机绑定失败", user.getId());
+                            return new Result(CodeInfo.USER_PHONE_BIND_FAIL.getCode(), CodeInfo.USER_PHONE_BIND_FAIL.getMsg());
+                        }
+                    }catch (Exception e){
+                        log.error("用户 {} 手机绑定失败：{}", user.getId() ,e.getMessage());
+                        return new Result(CodeInfo.USER_PHONE_BIND_FAIL.getCode(), CodeInfo.USER_PHONE_BIND_FAIL.getMsg());
+                    }
+                }
+            }
+        }
+        log.error("用户 {} 验证码异常", user.getId());
+        return new Result(CodeInfo.USER_CODE_FAIL.getCode(), CodeInfo.USER_CODE_FAIL.getMsg());
+    }
+
+    // Long id ,Long email
+    @PostMapping("/b/user/email")
+    public Result getEmailCode(User user){
+        // 进行验证码次数检查，过多则无法获取
+        if(telMailTestUtil.timesTest(user.getEmail())) {
+            try{
+                boolean flag = sendMailUtil.sendMailCode(user.getEmail());
+                if(flag){
+                    log.info("用户 {} 获取邮箱验证码成功", user.getId() );
+                    return new Result(CodeInfo.SUCCESS.getCode(), CodeInfo.SUCCESS.getMsg());
+                } else {
+                    log.error("用户 {} 获取邮箱验证码失败", user.getId() );
+                    return new Result(CodeInfo.USER_EMAIL_CODE_GET_FAIL.getCode(), CodeInfo.USER_EMAIL_CODE_GET_FAIL.getMsg());
+                }
+            }catch (Exception e){
+                log.error("用户 {} 获取邮箱验证码失败：{}", user.getId() ,e.getMessage());
+                return new Result(CodeInfo.USER_EMAIL_CODE_GET_FAIL.getCode(), CodeInfo.USER_EMAIL_CODE_GET_FAIL.getMsg());
+            }
+        }else {
+            log.info("用户 {} 短时间邮箱验证次数过多", user.getId() );
+            return new Result(CodeInfo.USER_CODE_TIMES.getCode(), CodeInfo.USER_CODE_TIMES.getMsg());
+        }
+    }
+
+    // Long id ,Long email
+    @PostMapping("/b/user/email/verify")
+    public Result bindUserEmail(User user,Integer code){
+        if(code != null) {
+            // 取出缓存的验证码
+            String redisCode = jedisUtil.get(user.getEmail());
+            // 确定验证码
+            if(redisCode != null && !"".equals(redisCode)) {
+                if (String.valueOf(code).equals(redisCode)) {
+                    try {
+                        Boolean a = userService.updateUser(user);
+                        if (a) {
+                            log.info("用户 {} 邮箱绑定成功", user.getId());
+                            return new Result(CodeInfo.SUCCESS.getCode(), CodeInfo.SUCCESS.getMsg());
+                        }else {
+                            log.error("用户 {} 邮箱绑定失败", user.getId());
+                            return new Result(CodeInfo.USER_EMAIL_BIND_FAIL.getCode(), CodeInfo.USER_EMAIL_BIND_FAIL.getMsg());
+                        }
+                    }catch (Exception e){
+                        log.error("用户 {} 邮箱绑定失败：{}", user.getId() ,e.getMessage());
+                        return new Result(CodeInfo.USER_EMAIL_BIND_FAIL.getCode(), CodeInfo.USER_EMAIL_BIND_FAIL.getMsg());
+                    }
+                }
+            }
+        }
+        log.error("用户 {} 验证码异常", user.getId());
+        return new Result(CodeInfo.USER_CODE_FAIL.getCode(), CodeInfo.USER_CODE_FAIL.getMsg());
+    }
+}

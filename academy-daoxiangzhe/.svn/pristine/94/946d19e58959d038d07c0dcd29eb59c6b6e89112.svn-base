@@ -1,0 +1,78 @@
+package com.dxz.admin.service.impl;
+
+import com.dxz.admin.dao.ManagerRoleMapper;
+import com.dxz.admin.dao.RoleMapper;
+import com.dxz.admin.pojo.*;
+import com.dxz.admin.service.ManagerService;
+import com.dxz.admin.service.RoleService;
+import org.apache.logging.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+@Service
+public class RoleServiceImpl implements RoleService {
+
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
+    @Resource
+    RoleMapper roleMapper;
+    @Autowired
+    ManagerService managerService;
+    @Resource
+    ManagerRoleMapper managerRoleMapper;
+
+    @Override
+    public List<Role> rolesByNull() {
+        RoleExample example = new RoleExample();
+        List<Role> roles = roleMapper.selectByExample(example);
+        if(roles.size()!=0){
+            for (Role role : roles) {
+                log.info("查询的角色ID：{}",role.getId());
+            }
+        }
+        return roles;
+    }
+
+    @Override
+    public Set<String> findRoleNameByManagerName(String name) {
+        Set<String> result = new HashSet<>();
+        List<Role> roles = listRolesByName(name);
+        for (Role role : roles) {
+            result.add(role.getName());
+            log.info("拥有角色名称：{}",role.getName());
+        }
+        return result;
+    }
+
+    @Override
+    public List<Role> listRolesByName(String name) {
+        List<Role> roles = new ArrayList<>();
+        Manager manager = managerService.findManagerByName(name);
+        if(null==manager)
+            return roles;
+        roles = listRolesById(manager.getId());
+        return roles;
+    }
+
+    @Override
+    public List<Role> listRolesById(Long managerId) {
+        List<Role> roles = new ArrayList<>();
+        ManagerRoleExample example = new ManagerRoleExample();
+        example.createCriteria().andMidEqualTo(managerId);
+        List<ManagerRole> managerRoles= managerRoleMapper.selectByExample(example);
+
+        for (ManagerRole managerRole : managerRoles) {
+            Role role=roleMapper.selectByPrimaryKey(managerRole.getRid());
+            roles.add(role);
+        }
+        return roles;
+    }
+}

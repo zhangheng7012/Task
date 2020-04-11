@@ -1,0 +1,201 @@
+package com.dxz.admin.pojo;
+
+import java.io.Serializable;
+
+public class User implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", avatarUrl='" + avatarUrl + '\'' +
+                ", sort=" + sort +
+                ", openid='" + openid + '\'' +
+                ", phone=" + phone +
+                ", email='" + email + '\'' +
+                ", grade=" + grade +
+                ", score=" + score +
+                ", status=" + status +
+                ", signSum=" + signSum +
+                ", signCon=" + signCon +
+                ", signNowCon=" + signNowCon +
+                ", createAt=" + createAt +
+                ", createId=" + createId +
+                ", updateAt=" + updateAt +
+                ", updateId=" + updateId +
+                '}';
+    }
+
+    private Long id;
+
+    private String name;
+
+    private String avatarUrl;
+
+    private Boolean sort;
+
+    private String openid;
+
+    private Long phone;
+
+    private String email;
+
+    private Boolean grade;
+
+    private Long score;
+
+    private Boolean status;
+
+    private Long signSum;
+
+    private Long signCon;
+
+    private Long signNowCon;
+
+    private Long createAt;
+
+    private Long createId;
+
+    private Long updateAt;
+
+    private Long updateId;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name == null ? null : name.trim();
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl == null ? null : avatarUrl.trim();
+    }
+
+    public Boolean getSort() {
+        return sort;
+    }
+
+    public void setSort(Boolean sort) {
+        this.sort = sort;
+    }
+
+    public String getOpenid() {
+        return openid;
+    }
+
+    public void setOpenid(String openid) {
+        this.openid = openid == null ? null : openid.trim();
+    }
+
+    public Long getPhone() {
+        return phone;
+    }
+
+    public void setPhone(Long phone) {
+        this.phone = phone;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email == null ? null : email.trim();
+    }
+
+    public Boolean getGrade() {
+        return grade;
+    }
+
+    public void setGrade(Boolean grade) {
+        this.grade = grade;
+    }
+
+    public Long getScore() {
+        return score;
+    }
+
+    public void setScore(Long score) {
+        this.score = score;
+    }
+
+    public Boolean getStatus() {
+        return status;
+    }
+
+    public void setStatus(Boolean status) {
+        this.status = status;
+    }
+
+    public Long getSignSum() {
+        return signSum;
+    }
+
+    public void setSignSum(Long signSum) {
+        this.signSum = signSum;
+    }
+
+    public Long getSignCon() {
+        return signCon;
+    }
+
+    public void setSignCon(Long signCon) {
+        this.signCon = signCon;
+    }
+
+    public Long getSignNowCon() {
+        return signNowCon;
+    }
+
+    public void setSignNowCon(Long signNowCon) {
+        this.signNowCon = signNowCon;
+    }
+
+    public Long getCreateAt() {
+        return createAt;
+    }
+
+    public void setCreateAt(Long createAt) {
+        this.createAt = createAt;
+    }
+
+    public Long getCreateId() {
+        return createId;
+    }
+
+    public void setCreateId(Long createId) {
+        this.createId = createId;
+    }
+
+    public Long getUpdateAt() {
+        return updateAt;
+    }
+
+    public void setUpdateAt(Long updateAt) {
+        this.updateAt = updateAt;
+    }
+
+    public Long getUpdateId() {
+        return updateId;
+    }
+
+    public void setUpdateId(Long updateId) {
+        this.updateId = updateId;
+    }
+}

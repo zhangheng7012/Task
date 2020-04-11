@@ -1,0 +1,198 @@
+package com.dxz.admin;
+
+import com.dxz.admin.dao.ManagerMapper;
+import com.dxz.admin.pojo.Manager;
+import com.dxz.admin.pojo.Role;
+import com.dxz.admin.result.CodeInfo;
+import com.dxz.admin.result.Result;
+import com.dxz.admin.service.ManagerService;
+import com.dxz.admin.service.PermissionService;
+import com.dxz.admin.service.RoleService;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.shiro.crypto.hash.SimpleHash;
+import org.apache.shiro.util.ByteSource;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
+
+import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@RunWith(SpringRunner.class)
+@SpringBootTest
+public class AdminApplicationTests {
+
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
+
+    @Autowired
+    private ManagerService managerService;
+    @Resource
+    private ManagerMapper managerMapper;
+    @Autowired
+    private PermissionService permissionService;
+    @Autowired
+    private RoleService roleService;
+
+    @Test
+    public void aq22() {
+        String str = "/a/u/role/11";
+        String str2 = "/a/u/role";
+
+        //截取字符串
+        String a1 = StringUtils.substringBeforeLast(str, "/");
+
+        System.out.println(a1.length());
+        if(a1.length() > 4){
+            System.out.println(a1);
+        }else {
+            System.out.println(str);
+        }
+
+        String a2 = StringUtils.substringBeforeLast(str2, "/");
+
+        System.out.println(a2.length());
+        if(a2.length() > 4){
+            System.out.println(a2);
+        }else {
+            System.out.println(str2);
+        }
+
+    }
+
+    @Test
+    public void aq() {
+        Manager manager33 = new Manager();
+        List<Long> roleIdList = new ArrayList<>();
+
+        manager33.setId(3L);
+        manager33.setName("角色333管理");
+        manager33.setUpdateId(7L);
+
+        roleIdList.add(77L);
+        roleIdList.add(88L);
+
+        // 查看名称是否重复
+        if (managerService.findManagerByName(manager33.getName()) != null) {
+            log.error("账号名称重复：{}", manager33.getName());
+        } else {
+            try {
+                Boolean a = managerService.updateManager(manager33, roleIdList);
+                if (a) {
+                    log.info("账号 {} 编辑成功", manager33.getId());
+                } else {
+                    log.error("账号 {} 编辑失败", manager33.getId());
+                }
+            } catch (Exception e) {
+                log.error("账号 {} 编辑失败：{}", manager33.getId(), e.getMessage());
+            }
+        }
+    }
+
+    @Test
+    public void aa() {
+//        Manager a = new Manager();
+////        a.setName("");
+////        a.setId(2L);
+//        System.out.println(managerService.findManagerListSearch(a));
+
+        Long id = 1L;
+        try{
+            Map<String,Object> map = new HashMap<>();
+            Manager manager = managerMapper.selectByPrimaryKey(id);
+            if(manager == null) {
+                log.info("账号 {} 不存在", id);
+            }else {
+                List<Role> roles = roleService.listRolesById(id);
+                manager.setRoles(roles);
+                log.info("账号 {} 查询成功", id);
+
+                List<Role> rolesList = roleService.rolesByNull();
+                log.info("角色列表查询成功，长度：{}", rolesList.size());
+
+                map.put("manager", manager);
+                map.put("roles", rolesList);
+
+            }
+        }catch (Exception e){
+            log.error("账号 {} 信息获取失败：{}", id ,e.getMessage());
+        }
+    }
+
+
+
+    @Test
+    public void aa1() {
+        Long id = 9L;
+        Boolean a =false;
+        try {
+            a = managerService.deleteManager(id);
+            if(a) {
+                log.info("账号 {} 删除成功", id);
+            }else {
+                log.error("账号 {} 删除失败", id);
+            }
+        }catch (Exception e){
+            log.error("账号 {} 删除失败：{}", id ,e.getMessage());
+        }
+    }
+
+    @Test
+    public void add() {
+        Manager manager = new Manager();
+        List<Long> roleIdList = new ArrayList<>();
+
+        manager.setName("角色管理");
+        manager.setPassword("zhanghao");
+        manager.setCreateId(2L);
+
+        roleIdList.add(1L);
+        roleIdList.add(2L);
+
+        // 查看名称是否重复
+        if (managerService.findManagerByName(manager.getName()) != null){
+            log.error("账号名称重复：{}",manager.getName());
+        }else {
+            // 插入账号数据
+            Long addManagerId = null;
+            try {
+                addManagerId = managerService.addManager(manager);
+            } catch (Exception e) {
+                log.error("账号插入失败：{}", e.getMessage());
+            }
+            // 插入账号-角色关系数据
+            List<Long> roles = null;
+            try {
+                roles = managerService.addManagerRole(addManagerId, manager.getCreateId(), roleIdList);
+            } catch (Exception e) {
+                log.error("插入账号-角色关系数据失败：{}", e.getMessage());
+                // 删除已保存的账号数据？？？   需要事件的绑定~~
+            }
+        }
+    }
+
+    /**
+     * 生成测试用的md5加密的密码
+     * */
+    @Test
+    public void test() {
+        String hashAlgorithmName = "md5";
+        // 密码均为 3 个首字母，除admin
+        String credentials = "uuu";//密码
+//        String credentials = "admin";//密码
+
+        int hashIterations = 7;
+        ByteSource credentialsSalt = ByteSource.Util.bytes("userManager");//账号名称为盐
+//        ByteSource credentialsSalt = ByteSource.Util.bytes("admin");//账号名称为盐
+        String  obj = new SimpleHash(hashAlgorithmName, credentials, credentialsSalt, hashIterations).toHex();
+        System.out.println(obj);
+    }
+
+}

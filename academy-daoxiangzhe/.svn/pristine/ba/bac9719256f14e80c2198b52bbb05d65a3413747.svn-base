@@ -1,0 +1,247 @@
+package com.dxz.admin.controller;
+
+import com.dxz.admin.dao.CourseMapper;
+import com.dxz.admin.dao.UserMapper;
+import com.dxz.admin.pojo.Course;
+import com.dxz.admin.pojo.User;
+import com.dxz.admin.result.CodeInfo;
+import com.dxz.admin.result.Result;
+import com.dxz.admin.service.*;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
+import org.apache.commons.lang3.StringUtils;
+import org.hibernate.validator.constraints.Length;
+import org.hibernate.validator.constraints.Range;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import javax.annotation.Resource;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/")
+@Validated
+public class CourseController {
+
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private CourseService courseService;
+    @Resource
+    private CourseMapper courseMapper;
+    @Resource
+    private UserMapper userMapper;
+
+    // String name,String avatarUrl, Long createId
+    @PostMapping("/a/u/video/teacher")
+    public Result addTeacher(@NotBlank(message = "老师名称不能为空")
+                     @Length(min = 1, max = 20, message = "老师名称长度为1-20")String name,
+                     @NotBlank(message = "老师头像不能为空") String avatarUrl, Long createId){
+        User user = new User();
+        user.setName(name);
+        // 用户分类为2，代表老师
+        user.setSort(2);
+        // 查看名称是否重复
+        if(userService.findTeacherByName(user) != null) {
+            log.error("老师名称重复：{}",name);
+            return new Result(CodeInfo.USER_NAME_GET.getCode(), CodeInfo.USER_NAME_GET.getMsg());
+        }else {
+            user.setAvatarUrl(avatarUrl);
+            user.setCreateId(createId);
+            user.setOpenid("laoshi");
+            // 插入老师数据
+            Long addUserId = userService.addUser(user);
+            if(addUserId == null){
+                log.error("老师插入失败");
+                return new Result(CodeInfo.USER_INSTER_FAIL.getCode(), CodeInfo.USER_INSTER_FAIL.getMsg());
+            }
+            return new Result(CodeInfo.SUCCESS.getCode(), CodeInfo.SUCCESS.getMsg());
+        }
+    }
+
+    @DeleteMapping(value = {"/a/u/video/teacher/{id}","/a/u/video/teacher/"})
+    public Result deleteTeacher(@NotNull(message = "用户id不能为空")
+                                    @PathVariable(value = "id",required = false) Long id){
+        // 用户分类，1是学生，2是老师
+        if(userMapper.selectByPrimaryKey(id).getSort() == 2){
+            Boolean a = userService.deleteTeacher(id);
+            if(a) {
+                log.info("老师 {} 删除成功", id);
+                return new Result(CodeInfo.SUCCESS.getCode(), CodeInfo.SUCCESS.getMsg());
+            }else {
+                log.error("老师 {} 删除失败", id);
+                return new Result(CodeInfo.USER_DELETE_FAIL.getCode(), CodeInfo.USER_DELETE_FAIL.getMsg());
+            }
+        }
+        log.info("用户 {} 不是老师，无法删除", id);
+        return new Result(CodeInfo.USER_NOT_TEACHER.getCode(), CodeInfo.USER_NOT_TEACHER.getMsg());
+    }
+
+    // String title 模糊查询, Integer sort,Integer grade,Integer subject,
+    // Long loveSum 范围查询,Long collectSum 范围查询,Integer status, String teacherName 准确查询
+    @GetMapping("/a/u/video/list/search")
+    public Result videoList(@Validated(value = {Course.search.class}) Course course, String teacherName,
+                            @RequestParam(required = false,defaultValue = "1",value = "pageNumber") Integer pageNumber,
+                            @RequestParam(required = false,defaultValue = "10",value = "pageSize") Integer pageSize) {
+        PageHelper.startPage(pageNumber, pageSize);
+
+        Long teacherId = null;
+        if (!StringUtils.isBlank(teacherName)){
+            // 根据老师名称查询对应id
+            User user = new User();
+            user.setName(teacherName);
+            // 用户分类为2，代表老师
+            user.setSort(2);
+            teacherId = userService.findTeacherByName(user).getId();
+        }
+        if(teacherId != null) {
+            course.setTeacherId(teacherId);
+        }
+        List<Course> videos = null;
+        try {
+            videos = courseService.findCourseListSearch(course);
+            if(videos.size() == 0){
+                log.info("无符合条件的视频");
+                return new Result(CodeInfo.COURSE_FIND_NULL.getCode(),CodeInfo.COURSE_FIND_NULL.getMsg());
+            }
+        }catch (Exception e){
+            log.error("视频列表获取失败：{}",e.getMessage());
+            return new Result(CodeInfo.COURSE_LIST_GET_FAIL.getCode(),CodeInfo.COURSE_LIST_GET_FAIL.getMsg());
+        }
+        PageInfo<Course> pageInfo = new PageInfo<Course>(videos);
+        return new Result(CodeInfo.SUCCESS.getCode(),CodeInfo.SUCCESS.getMsg(),pageInfo);
+    }
+
+    @GetMapping("/a/u/video")
+    public Result toAddVideo() {
+        User user = new User();
+        // 用户分类为2，代表老师
+        user.setSort(2);
+        List<User> users = userService.findUserListSearch(user);
+        if(users.size() == 0){
+            log.info("老师列表为空");
+            return new Result(CodeInfo.USER_LIST_GET_FAIL.getCode(),CodeInfo.USER_LIST_GET_FAIL.getMsg());
+        }
+        return new Result(CodeInfo.SUCCESS.getCode(),CodeInfo.SUCCESS.getMsg(),users);
+    }
+
+    // String title, Integer sort,String bannerUrl,
+    // Integer grade,Integer subject, String introduction,
+    // String videoUrl,String content, Long teacherId,Long createId
+    @PostMapping("/a/u/video")
+    public Result addVideo(@Validated(value = {Course.insert.class}) Course course){
+        // 标题非空判断，再查看标题是否重复
+        if( !StringUtils.isBlank(course.getTitle()) && courseService.findCourseByTitle(course.getTitle()) != null) {
+            log.error("课程标题重复：{}", course.getTitle());
+            return new Result(CodeInfo.COURSE_NAME_GET.getCode(), CodeInfo.COURSE_NAME_GET.getMsg());
+        }else {
+            // 插入账号数据
+            Long addManagerId = courseService.addCourse(course);
+            if(addManagerId == null){
+                log.error("视频插入失败");
+                return new Result(CodeInfo.COURSE_INSTER_FAIL.getCode(), CodeInfo.COURSE_INSTER_FAIL.getMsg());
+            }
+            return new Result(CodeInfo.SUCCESS.getCode(), CodeInfo.SUCCESS.getMsg());
+        }
+    }
+
+    @DeleteMapping(value = {"/a/u/video/{id}","/a/u/video/"})
+    public Result deleteVideo(@NotNull(message = "视频id不能为空")
+                                  @PathVariable(value = "id",required = false) Long id){
+        Boolean a = courseService.deleteCourse(id);
+        if(a) {
+            log.info("视频 {} 删除成功", id);
+            return new Result(CodeInfo.SUCCESS.getCode(), CodeInfo.SUCCESS.getMsg());
+        }else {
+            log.error("视频 {} 删除失败", id);
+            return new Result(CodeInfo.COURSE_DELETE_FAIL.getCode(), CodeInfo.COURSE_DELETE_FAIL.getMsg());
+        }
+    }
+
+    @GetMapping(value = {"/a/u/video/{id}","/a/u/video/"})
+    public Result editVideo(@NotNull(message = "视频id不能为空")
+                                @PathVariable(value = "id",required = false) Long id){
+        Map<String,Object> map = new HashMap<>();
+        Course course = courseMapper.selectByPrimaryKey(id);
+        if(course == null) {
+            log.error("老师列表为空, 视频 {} 信息获取失败", id );
+            return new Result(CodeInfo.COURSE_MSG_GET_FAIL.getCode(), CodeInfo.COURSE_MSG_GET_FAIL.getMsg());
+        }else {
+            log.info("视频 {} 查询成功", id);
+
+            User user = new User();
+            // 用户分类为2，代表老师
+            user.setSort(2);
+            List<User> users = userService.findUserListSearch(user);
+            if(users.size() == 0){
+                log.info("老师列表为空");
+                return new Result(CodeInfo.USER_LIST_GET_FAIL.getCode(),CodeInfo.USER_LIST_GET_FAIL.getMsg());
+            }
+            map.put("video", course);
+            map.put("teachers", users);
+            return new Result(CodeInfo.SUCCESS.getCode(), CodeInfo.SUCCESS.getMsg(), map);
+        }
+    }
+
+    // Long id,String title, Integer sort,String bannerUrl,
+    // Integer grade,Integer subject, String introduction,
+    // String videoUrl,String content, Long teacherId,Long updateId
+    @PutMapping(value = {"/a/u/video/{id}","/a/u/video/"})
+    public Result updateVideo(@NotNull(message = "视频id不能为空")
+                                  @PathVariable(value = "id",required = false) Long id,
+                              @Validated(value = {Course.update.class}) Course course){
+        course.setId(id);
+        // 查看视频标题是否重复
+        if(courseService.findCourseByTitle(course.getTitle()) != null) {
+            log.error("课程标题重复：{}", course.getTitle());
+            return new Result(CodeInfo.COURSE_NAME_GET.getCode(), CodeInfo.COURSE_NAME_GET.getMsg());
+        }else {
+            Boolean a = courseService.updateCourse(course);
+            if (a) {
+                log.info("视频 {} 编辑成功", id);
+                return new Result(CodeInfo.SUCCESS.getCode(), CodeInfo.SUCCESS.getMsg());
+            } else {
+                log.error("视频 {} 编辑失败", id);
+                return new Result(CodeInfo.COURSE_UPDATE_FAIL.getCode(), CodeInfo.COURSE_UPDATE_FAIL.getMsg());
+            }
+        }
+    }
+
+    // Long id,Integer status,Integer sort
+    @PutMapping("/a/u/video/status")
+    public Result updateVideoStatus(@NotNull(message = "视频id不能为空")
+                        @Min(value = 1, message = "视频id最小应为1") Long id,
+                        @NotNull(message = "状态数字不能为空")
+                        @Range(min = 1, max = 2, message = "状态数字应为1或2") Integer status,
+                        @NotNull(message = "分类数字不能为空")
+                        @Range(min = 1, max = 2, message = "分类数字应为1或2") Integer sort){
+
+        // 视频分类，1是banner视频，视频状态，1为上架，若banner视频 >= 8
+        if(sort == 1 && status == 1 && courseService.findCountVideo(sort,status) >= 8 ) {
+            log.info("banner视频上架数量过多，请任意下架banner视频后再操作");
+            return new Result(CodeInfo.COURSE_BANNER_MORE.getCode(), CodeInfo.COURSE_BANNER_MORE.getMsg());
+        }
+        // 新建course，设置属性
+        Course course = new Course();
+        course.setId(id);
+        course.setStatus(status);
+        Boolean a = courseService.updateCourse(course);
+        if (a) {
+            log.info("视频 {} 状态修改成功", id);
+            return new Result(CodeInfo.SUCCESS.getCode(), CodeInfo.SUCCESS.getMsg());
+        } else {
+            log.error("视频 {} 状态修改失败", id);
+            return new Result(CodeInfo.COURSE_STATUS_UPDATE_FAIL.getCode(), CodeInfo.COURSE_STATUS_UPDATE_FAIL.getMsg());
+        }
+    }
+}

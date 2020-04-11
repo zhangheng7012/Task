@@ -1,0 +1,20 @@
+package com.dxz.admin.service;
+
+import com.dxz.admin.pojo.User;
+
+import java.util.List;
+
+public interface UserService {
+
+    // 根据用户条件查询，无条件则查询列表
+    List<User> findUserListSearch(User user);
+    // 更新用户状态
+    Boolean updateUserStatus(User user);
+    // 根据老师名称，准确查询
+    User findTeacherByName(User user);
+    // 添加老师
+    Long addUser(User user);
+    // 根据id，删除用户
+    Boolean deleteUser(Long id);
+
+}

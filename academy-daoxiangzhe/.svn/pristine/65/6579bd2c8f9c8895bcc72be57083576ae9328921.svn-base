@@ -1,0 +1,168 @@
+package com.dxz.admin.controller;
+
+import com.dxz.admin.dao.ManagerMapper;
+import com.dxz.admin.dao.RoleMapper;
+import com.dxz.admin.pojo.Manager;
+import com.dxz.admin.pojo.Permission;
+import com.dxz.admin.pojo.Role;
+import com.dxz.admin.result.CodeInfo;
+import com.dxz.admin.result.Result;
+import com.dxz.admin.service.ManagerService;
+import com.dxz.admin.service.PermissionService;
+import com.dxz.admin.service.RoleService;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import javax.annotation.Resource;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/")
+public class RoleController {
+
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
+    @Autowired
+    private ManagerService managerService;
+    @Resource
+    private RoleMapper roleMapper;
+    @Autowired
+    private PermissionService permissionService;
+    @Autowired
+    private RoleService roleService;
+
+    @GetMapping("/a/u/role/list")
+    public Result roleList(@RequestParam(required = false,
+                            defaultValue = "1",value = "pageNumber") Integer pageNumber,
+                           @RequestParam(required = false,
+                           defaultValue = "10",value = "pageSize") Integer pageSize) {
+        PageHelper.startPage(pageNumber,pageSize);
+        List<Role> roles = null;
+        try {
+            roles = roleService.listRolesByNull();
+        }catch (Exception e){
+            log.error("角色列表获取失败：{}",e.getMessage());
+            return new Result(CodeInfo.ROLE_LIST_GET_FAIL.getCode(),CodeInfo.ROLE_LIST_GET_FAIL.getMsg());
+        }
+        PageInfo<Role> pageInfo = new PageInfo<Role>(roles);
+        return new Result(CodeInfo.SUCCESS.getCode(),CodeInfo.SUCCESS.getMsg(),pageInfo);
+    }
+
+    @GetMapping("/a/u/role")
+    public Result toAddRole() {
+        List<Permission> pers = null;
+        try {
+            pers = permissionService.listPersByNull();
+        }catch (Exception e){
+            log.error("权限列表获取失败：{}",e.getMessage());
+            return new Result(CodeInfo.PERMISSION_LIST_GET_FAIL.getCode(),CodeInfo.PERMISSION_LIST_GET_FAIL.getMsg());
+        }
+        return new Result(CodeInfo.SUCCESS.getCode(),CodeInfo.SUCCESS.getMsg(),pers);
+    }
+
+//    String name,String roleMsg, Long createId, List<Long> perIdList
+    @PostMapping("/a/u/role")
+    public Result addRole(Role role,@RequestParam(value = "perIdList")List<Long> perIdList){
+        // 查看名称是否重复
+        if(roleService.findRoleByName(role.getName()) != null) {
+            log.error("角色名称重复：{}", role.getName());
+            return new Result(CodeInfo.ROLE_NAME_GET.getCode(), CodeInfo.ROLE_NAME_GET.getMsg());
+        }else {
+            // 插入账号数据
+            Long addRoleId = null;
+            try {
+                addRoleId = roleService.addRole(role);
+            } catch (Exception e) {
+                log.error("角色插入失败：{}", e.getMessage());
+                return new Result(CodeInfo.ROLE_INSTER_FAIL.getCode(), CodeInfo.ROLE_INSTER_FAIL.getMsg());
+            }
+            // 插入账号-角色关系数据
+            List<Long> roles = null;
+            try {
+                roles = roleService.addRolePer(addRoleId, role.getCreateId(), perIdList);
+            } catch (Exception e) {
+                log.error("插入角色-权限关系数据失败：{}", e.getMessage());
+                return new Result(CodeInfo.ROLE_INSTER_FAIL.getCode(), CodeInfo.ROLE_INSTER_FAIL.getMsg());
+                // 若失败，删除已保存的角色数据？？？   需要事务的绑定~~
+            }
+            return new Result(CodeInfo.SUCCESS.getCode(), CodeInfo.SUCCESS.getMsg());
+        }
+    }
+
+    @DeleteMapping("/a/u/role/{id}")
+    public Result deleteRole(Long id){
+        Boolean a = false;
+        try {
+            a = roleService.deleteRole(id);
+            if(a) {
+                log.info("角色 {} 删除成功", id);
+                return new Result(CodeInfo.SUCCESS.getCode(), CodeInfo.SUCCESS.getMsg());
+            }else {
+                log.error("角色 {} 删除失败", id);
+                return new Result(CodeInfo.ROLE_DELETE_FAIL.getCode(), CodeInfo.ROLE_DELETE_FAIL.getMsg());
+            }
+        }catch (Exception e){
+            log.error("角色 {} 删除失败：{}", id ,e.getMessage());
+            return new Result(CodeInfo.ROLE_DELETE_FAIL.getCode(), CodeInfo.ROLE_DELETE_FAIL.getMsg());
+        }
+    }
+
+    @GetMapping("/a/u/role/{id}")
+    public Result editRole(Long id){
+
+        try{
+            Map<String,Object> map = new HashMap<>();
+            Role role = roleMapper.selectByPrimaryKey(id);
+            if(role == null) {
+                log.info("角色 {} 不存在", id);
+                return new Result(CodeInfo.ROLE_NULL_FAIL.getCode(), CodeInfo.ROLE_NULL_FAIL.getMsg());
+            }else {
+                List<Permission> pers = permissionService.listPersById(id);
+                role.setPermissions(pers);
+                log.info("角色 {} 查询成功", id);
+
+                List<Permission> persList = permissionService.listPersByNull();
+                log.info("权限列表查询成功，长度：{}", persList.size());
+
+                map.put("role", role);
+                map.put("permissions", persList);
+
+                return new Result(CodeInfo.SUCCESS.getCode(), CodeInfo.SUCCESS.getMsg(), map);
+            }
+        }catch (Exception e){
+            log.error("角色 {} 信息获取失败：{}", id ,e.getMessage());
+            return new Result(CodeInfo.ROLE_MSG_GET_FAIL.getCode(), CodeInfo.ROLE_MSG_GET_FAIL.getMsg());
+        }
+    }
+
+    // Long id,String name, Long updateId, List<Long> perIdList
+    @PutMapping("/a/u/role/{id}")
+    public Result updateRole(Role role, @RequestParam(value = "perIdList")List<Long> perIdList){
+        // 查看名称是否重复
+        if(roleService.findRoleByName(role.getName()) != null) {
+            log.error("角色名称重复：{}", role.getName());
+            return new Result(CodeInfo.ROLE_NAME_GET.getCode(), CodeInfo.ROLE_NAME_GET.getMsg());
+        }else {
+            try {
+                Boolean a = roleService.updateRole(role, perIdList);
+                if (a) {
+                    log.info("角色 {} 编辑成功", role.getId());
+                    return new Result(CodeInfo.SUCCESS.getCode(), CodeInfo.SUCCESS.getMsg());
+                } else {
+                    log.error("角色 {} 编辑失败", role.getId());
+                    return new Result(CodeInfo.ROLE_UPDATE_FAIL.getCode(), CodeInfo.ROLE_UPDATE_FAIL.getMsg());
+                }
+            }catch (Exception e){
+                log.error("角色 {} 编辑失败：{}", role.getId() ,e.getMessage());
+                return new Result(CodeInfo.ROLE_UPDATE_FAIL.getCode(), CodeInfo.ROLE_UPDATE_FAIL.getMsg());
+            }
+        }
+    }
+}
+

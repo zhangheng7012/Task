@@ -1,0 +1,39 @@
+package com.dxz.admin.dao;
+
+import com.dxz.admin.pojo.Manager;
+import com.dxz.admin.pojo.ManagerExample;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
+
+public interface ManagerMapper {
+    // 根据账号条件查询，无条件则查询列表
+    List<Manager> findManagerListSearch(Manager manager);
+
+    List<Manager> findManagerByName(String name);
+
+    Long deleteByManagerId(Long id);
+
+    Long countByExample(ManagerExample example);
+
+    Long deleteByExample(ManagerExample example);
+
+    Long deleteByPrimaryKey(Long id);
+
+    Long insert(Manager record);
+
+    Long insertSelective(Manager record);
+
+    List<Manager> selectByExample(ManagerExample example);
+
+    Manager selectByPrimaryKey(Long id);
+
+    Long updateByExampleSelective(@Param("record") Manager record, @Param("example") ManagerExample example);
+
+    Long updateByExample(@Param("record") Manager record, @Param("example") ManagerExample example);
+
+    Long updateByPrimaryKeySelective(Manager record);
+
+    Long updateByPrimaryKey(Manager record);
+}
